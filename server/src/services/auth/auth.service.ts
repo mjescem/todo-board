@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { db } from "../../database/index.js";
 import { users } from "../../database/schema/user.js";
 import jwt from "jsonwebtoken";
-import type { SignUpParams } from "./authSchema.js";
+import type { LoginParams, SignUpParams } from "./authSchema.js";
 
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -30,4 +30,26 @@ export async function signUpUser({ name, email, password }: SignUpParams) {
   });
 
   return { user: newUser, token };
+}
+
+export async function loginUser({email, password}: LoginParams) {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+
+     if (!user) {
+       throw new Error("Invalid credentials");
+     }
+
+     const isValid = await bcrypt.compare(password, user.password);
+     if (!isValid) {
+       throw new Error("Invalid credentials");
+     }
+
+     const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+       expiresIn: "1d",
+     });
+
+     return {
+       user: { id: user.id, name: user.name, email: user.email },
+       token,
+     };
 }
