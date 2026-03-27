@@ -16,7 +16,7 @@ export async function signUp(req: Request, res: Response) {
         .json({ error: "Validation failed", details: error });
       return;
     }
-    if (error instanceof Error && error.message === "User already exists") {
+    if (error instanceof Error && error.message === "Email already exists") {
       res.status(409).json({ error: error.message });
       return;
     }

@@ -15,7 +15,7 @@ export async function signUpUser({ name, email, password }: SignUpParams) {
     .from(users)
     .where(eq(users.email, email));
   if (existingUser.length > 0) {
-    throw new Error("User already exists");
+    throw new Error("Email already exists");
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
