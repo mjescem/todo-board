@@ -1,0 +1,35 @@
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+}
+
+const initialState: AuthState = {
+  user: null,
+  token: null,
+};
+
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    setCredentials: (
+      state,
+      action: PayloadAction<{ user: User; token: string }>,
+    ) => {
+      state.user = action.payload.user;
+      state.token = action.payload.token;
+    },
+  },
+});
+
+export const { setCredentials } = authSlice.actions;
+
+export default authSlice.reducer;
