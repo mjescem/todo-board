@@ -1,19 +1,30 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Register from "./pages/Register";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
-import { store } from "./app/store";
+import { persistor, store } from "./app/store";
+import { PersistGate } from "redux-persist/integration/react";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import Home from "./pages/Home";
+import PublicRoute from "./routes/PublicRoute";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
 
 function App() {
 
   return (
     <Provider store={store}>
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/signup" element={<Register />} />
-      </Routes>
-    </Router>
+      <PersistGate loading={null} persistor={persistor}>
+        <Router>
+          <Routes>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<Home />} />
+            </Route>
+            <Route element={<PublicRoute />}>
+              <Route path="/signup" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+            </Route>
+          </Routes>
+        </Router>
+      </PersistGate>
     </Provider>
   );
 }
