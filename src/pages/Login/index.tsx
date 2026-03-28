@@ -1,53 +1,55 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useAppDispatch } from "@/app/hooks";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
-import { useSignUpMutation } from "@/features/auth/authApi";
-import { useAppDispatch } from "@/app/hooks";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useLoginMutation } from "@/features/auth/authApi";
 import { setCredentials } from "@/features/auth/authSlice";
 import { getErrorMessage } from "@/lib/utils/getErrorMessageHelper";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import * as z from "zod";
 
-const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+const loginSchema = z.object({
   email: z.email("Invalid email address"),
   password: z.string().min(5, "Password must be at least 5 characters"),
 });
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>;
 
-function Register() {
-  const dispatch = useAppDispatch();
-  const [signUp, { isLoading, error }] = useSignUpMutation();
+function Login (){
+const navigate = useNavigate();
+  const [login, {isLoading, error}] = useLoginMutation()
+  const dispatch = useAppDispatch()
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
-      name: "",
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: RegisterFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     try {
-      const userData = await signUp(data).unwrap();
-      dispatch(setCredentials(userData));
+      console.log("Form Data:", data);
+      const userData = await login(data).unwrap()
+      dispatch(setCredentials(userData))
+      navigate("/");
     } catch (err) {
-      console.error("Failed to register", err);
+      console.error("Failed to login", err);
     }
   };
 
@@ -55,10 +57,11 @@ function Register() {
     <main className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm border-none shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
         <CardHeader className="text-center">
-          <CardTitle>Create an account</CardTitle>
-          <CardDescription>Enter your details below to sign up</CardDescription>
+          <CardTitle>Login to your account</CardTitle>
+          <CardDescription>
+            Enter your email below to login to your account
+          </CardDescription>
         </CardHeader>
-
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent>
             <div className="flex flex-col gap-6">
@@ -67,18 +70,6 @@ function Register() {
                   {getErrorMessage(error)}
                 </div>
               )}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  placeholder="John Doe"
-                  disabled={isLoading}
-                  {...register("name")}
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name.message}</p>
-                )}
-              </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -92,8 +83,11 @@ function Register() {
                   <p className="text-sm text-red-500">{errors.email.message}</p>
                 )}
               </div>
+
               <div className="flex flex-col gap-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                </div>
                 <Input
                   id="password"
                   type="password"
@@ -108,21 +102,22 @@ function Register() {
               </div>
             </div>
           </CardContent>
+
           <CardFooter className="flex flex-col gap-4">
             <Button
               type="submit"
               className="w-full bg-primary"
               disabled={isLoading}
             >
-              {isLoading ? "Registering..." : "Register"}
+              Login
             </Button>
             <div className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              Don&apos;t have an account?{" "}
               <a
-                href="/login"
+                href="/signup"
                 className="font-semibold text-primary hover:underline"
               >
-                Sign in
+                Sign up
               </a>
             </div>
           </CardFooter>
@@ -130,6 +125,6 @@ function Register() {
       </Card>
     </main>
   );
-}
+};
 
-export default Register;
+export default Login;

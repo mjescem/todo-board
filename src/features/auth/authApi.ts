@@ -12,6 +12,11 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface LoginRequest{
+  email: string;
+  password: string;
+}
+
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
@@ -23,7 +28,14 @@ export const authApi = createApi({
         body: credentials,
       }),
     }),
+    login: builder.mutation<AuthResponse, LoginRequest>({
+      query: (credentials) => ({
+        url: "/auth/login",
+        method: "POST",
+        body: credentials
+      })
+    })
   }),
 });
 
-export const { useSignUpMutation } = authApi;
+export const { useSignUpMutation, useLoginMutation } = authApi;
