@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import * as z from "zod";
-import { createBoard, deleteBoard, getBoards, updateBoard } from "../services/board/board.service.js";
+import {
+  createBoard,
+  deleteBoard,
+  getBoards,
+  updateBoard,
+} from "../services/board/board.service.js";
 
 export async function getBoardsHandler(req: Request, res: Response) {
   try {
@@ -73,5 +78,3 @@ export async function deleteBoardHandler(req: Request, res: Response) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
-
-

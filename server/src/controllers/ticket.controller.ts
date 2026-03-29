@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import * as z from "zod";
-import { createTicket, deleteTicket, getTickets, updateTicket } from "../services/ticket/ticket.service.js";
+import {
+  createTicket,
+  deleteTicket,
+  getTickets,
+  updateTicket,
+} from "../services/ticket/ticket.service.js";
 
 export async function getTicketsHandler(req: Request, res: Response) {
   try {
@@ -9,7 +14,7 @@ export async function getTicketsHandler(req: Request, res: Response) {
     res.status(200).json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error});
+      res.status(400).json({ error: error });
       return;
     }
     if (error instanceof Error && error.message.includes("unauthorized")) {
@@ -22,7 +27,7 @@ export async function getTicketsHandler(req: Request, res: Response) {
 
 export async function createTicketHandler(req: Request, res: Response) {
   try {
-    const {categoryId, title, description, isDraft, expiryDate } = req.body;
+    const { categoryId, title, description, isDraft, expiryDate } = req.body;
     const result = await createTicket({
       categoryId,
       ownerId: req.user!.userId,

@@ -1,7 +1,16 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "../../database/index.js";
 import { boards } from "../../database/schema/board.js";
-import { createCategorySchema, deleteCategorySchema, getCategoriesSchema, updateCategorySchema, type CreateCategoryParams, type DeleteCategoryParams, type GetCategoriesParams, type UpdateCategoryParams } from "./categorySchema.js";
+import {
+  createCategorySchema,
+  deleteCategorySchema,
+  getCategoriesSchema,
+  updateCategorySchema,
+  type CreateCategoryParams,
+  type DeleteCategoryParams,
+  type GetCategoriesParams,
+  type UpdateCategoryParams,
+} from "./categorySchema.js";
 import { categories } from "../../database/schema/category.js";
 
 export async function getCategories(params: GetCategoriesParams) {
@@ -30,10 +39,7 @@ export async function createCategory(params: CreateCategoryParams) {
 
   if (!board) throw new Error("Board not found");
 
-  const existing = await db
-    .select()
-    .from(categories)
-    .where(eq(categories.boardId, boardId));
+  const existing = await db.select().from(categories).where(eq(categories.boardId, boardId));
 
   const [category] = await db
     .insert(categories)
@@ -53,11 +59,7 @@ export async function updateCategory(params: UpdateCategoryParams) {
 
   if (!category) throw new Error("Category not found");
 
-  const [updated] = await db
-    .update(categories)
-    .set(data)
-    .where(eq(categories.id, id))
-    .returning();
+  const [updated] = await db.update(categories).set(data).where(eq(categories.id, id)).returning();
   return updated;
 }
 
@@ -71,9 +73,6 @@ export async function deleteCategory(params: DeleteCategoryParams) {
 
   if (!category) throw new Error("Category not found");
 
-  const [deleted] = await db
-    .delete(categories)
-    .where(eq(categories.id, id))
-    .returning();
+  const [deleted] = await db.delete(categories).where(eq(categories.id, id)).returning();
   return deleted;
 }

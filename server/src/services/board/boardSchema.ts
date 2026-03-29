@@ -6,20 +6,14 @@ export const getBoardsSchema = z.object({
 
 export const createBoardSchema = z.object({
   ownerId: z.uuid(),
-  title: z
-    .string()
-    .min(1, "Title is required")
-    .max(100, "Title must be 100 characters or less"),
+  title: z.string().min(1, "Title is required").max(100, "Title must be 100 characters or less"),
 });
 
 export const updateBoardSchema = z.object({
   id: z.uuid("Invalid board ID"),
   ownerId: z.uuid(),
   data: z.object({
-    title: z
-      .string()
-      .min(1, "Title is required")
-      .max(100, "Title must be 100 characters or less"),
+    title: z.string().min(1, "Title is required").max(100, "Title must be 100 characters or less"),
   }),
 });
 

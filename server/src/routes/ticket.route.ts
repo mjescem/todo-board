@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { createTicketHandler, deleteTicketHandler, getTicketsHandler, updateTicketHandler } from "../controllers/ticket.controller.js";
+import {
+  createTicketHandler,
+  deleteTicketHandler,
+  getTicketsHandler,
+  updateTicketHandler,
+} from "../controllers/ticket.controller.js";
 
 const router = Router();
 

@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { createBoardHandler, deleteBoardHandler, getBoardsHandler, updateBoardHandler } from "../controllers/board.controller.js";
+import {
+  createBoardHandler,
+  deleteBoardHandler,
+  getBoardsHandler,
+  updateBoardHandler,
+} from "../controllers/board.controller.js";
 
 const router = Router();
 

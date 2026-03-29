@@ -1,7 +1,16 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "../../database/index.js";
 import { boards } from "../../database/schema/board.js";
-import { createBoardSchema, deleteBoardSchema, getBoardsSchema, updateBoardSchema, type CreateBoardParams, type DeleteBoardParams, type GetBoardsParams, type UpdateBoardParams } from "./boardSchema.js";
+import {
+  createBoardSchema,
+  deleteBoardSchema,
+  getBoardsSchema,
+  updateBoardSchema,
+  type CreateBoardParams,
+  type DeleteBoardParams,
+  type GetBoardsParams,
+  type UpdateBoardParams,
+} from "./boardSchema.js";
 
 export async function getBoards(params: GetBoardsParams) {
   const { ownerId } = getBoardsSchema.parse(params);
@@ -10,10 +19,7 @@ export async function getBoards(params: GetBoardsParams) {
 
 export async function createBoard(params: CreateBoardParams) {
   const { ownerId, title } = createBoardSchema.parse(params);
-  const [board] = await db
-    .insert(boards)
-    .values({ title, ownerId })
-    .returning();
+  const [board] = await db.insert(boards).values({ title, ownerId }).returning();
   return board;
 }
 

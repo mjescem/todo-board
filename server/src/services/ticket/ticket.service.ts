@@ -3,7 +3,16 @@ import { db } from "../../database/index.js";
 import { tickets } from "../../database/schema/ticket.js";
 import { categories } from "../../database/schema/category.js";
 import { boards } from "../../database/schema/board.js";
-import { createTicketSchema, deleteTicketSchema, getTicketsSchema, updateTicketSchema, type CreateTicketParams, type DeleteTicketParams, type GetTicketsParams, type UpdateTicketParams } from "./ticketSchema.js";
+import {
+  createTicketSchema,
+  deleteTicketSchema,
+  getTicketsSchema,
+  updateTicketSchema,
+  type CreateTicketParams,
+  type DeleteTicketParams,
+  type GetTicketsParams,
+  type UpdateTicketParams,
+} from "./ticketSchema.js";
 
 async function verifyCategoryOwnership(categoryId: string, ownerId: string) {
   const [category] = await db
@@ -19,21 +28,14 @@ async function verifyCategoryOwnership(categoryId: string, ownerId: string) {
 export async function getTickets(params: GetTicketsParams) {
   const { categoryId, ownerId } = getTicketsSchema.parse(params);
   await verifyCategoryOwnership(categoryId, ownerId);
-  return db
-    .select()
-    .from(tickets)
-    .where(eq(tickets.categoryId, categoryId))
-    .orderBy(tickets.order);
+  return db.select().from(tickets).where(eq(tickets.categoryId, categoryId)).orderBy(tickets.order);
 }
 
 export async function createTicket(params: CreateTicketParams) {
   const { categoryId, ownerId, data } = createTicketSchema.parse(params);
   await verifyCategoryOwnership(categoryId, ownerId);
 
-  const existing = await db
-    .select()
-    .from(tickets)
-    .where(eq(tickets.categoryId, categoryId));
+  const existing = await db.select().from(tickets).where(eq(tickets.categoryId, categoryId));
 
   const [ticket] = await db
     .insert(tickets)
@@ -89,9 +91,6 @@ export async function deleteTicket(params: DeleteTicketParams) {
 
   if (!ticket) throw new Error("Ticket not found");
 
-  const [deleted] = await db
-    .delete(tickets)
-    .where(eq(tickets.id, id))
-    .returning();
+  const [deleted] = await db.delete(tickets).where(eq(tickets.id, id)).returning();
   return deleted;
 }

@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import * as z from "zod";
-import { createCategory, deleteCategory, getCategories, updateCategory } from "../services/category/category.service.js";
+import {
+  createCategory,
+  deleteCategory,
+  getCategories,
+  updateCategory,
+} from "../services/category/category.service.js";
 
 export async function getCategoriesHandler(req: Request, res: Response) {
   try {
@@ -10,7 +15,7 @@ export async function getCategoriesHandler(req: Request, res: Response) {
   } catch (error) {
     console.info(error);
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error});
+      res.status(400).json({ error: error });
       return;
     }
     if (error instanceof Error && error.message.includes("unauthorized")) {
