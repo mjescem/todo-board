@@ -1,0 +1,145 @@
+
+@baseUrl = http://localhost:3001/api
+@authToken = {{login.response.body.token}}
+
+# @name signup
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "Test2 User",
+  "email": "test2@example.com",
+  "password": "password123"
+}
+
+###
+
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "password": "password123"
+}
+
+###
+
+### Boards
+
+# @name getBoards
+GET {{baseUrl}}/boards
+Authorization: Bearer {{authToken}}
+
+###
+
+# @name createBoard
+POST {{baseUrl}}/boards
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "New Project Board"
+}
+
+###
+
+@boardId = {{createBoard.response.body.id}}
+
+# @name updateBoard
+PATCH {{baseUrl}}/boards/{{boardId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Updated Project Board"
+}
+
+###
+
+# @name deleteBoard
+DELETE {{baseUrl}}/boards/{{boardId}}
+Authorization: Bearer {{authToken}}
+
+###
+
+### Categories
+
+# @name getCategories
+GET {{baseUrl}}/categories?boardId={{boardId}}
+Authorization: Bearer {{authToken}}
+
+###
+
+# @name createCategory
+POST {{baseUrl}}/categories
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "boardId": "{{boardId}}",
+  "title": "To Do",
+  "color": "#6366f1"
+}
+
+###
+
+@categoryId = {{createCategory.response.body.id}}
+
+# @name updateCategory
+PATCH {{baseUrl}}/categories/{{categoryId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "In Progress",
+  "color": "#ec4899"
+}
+
+###
+
+# @name deleteCategory
+DELETE {{baseUrl}}/categories/{{categoryId}}
+Authorization: Bearer {{authToken}}
+
+###
+
+### Tickets
+
+# @name getTickets
+GET {{baseUrl}}/tickets?categoryId={{categoryId}}
+Authorization: Bearer {{authToken}}
+
+###
+
+# @name createTicket
+POST {{baseUrl}}/tickets
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "categoryId": "{{categoryId}}",
+  "title": "Design UI Mockups",
+  "description": "Create high-fidelity mockups for the dashboard.",
+  "isDraft": false
+}
+
+###
+
+@ticketId = {{createTicket.response.body.id}}
+
+# @name updateTicket
+PATCH {{baseUrl}}/tickets/{{ticketId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "title": "Finalize UI Mockups",
+  "isDraft": true
+}
+
+###
+
+# @name deleteTicket
+DELETE {{baseUrl}}/tickets/{{ticketId}}
+Authorization: Bearer {{authToken}}
