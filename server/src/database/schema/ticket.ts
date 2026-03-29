@@ -1,9 +1,9 @@
-import { boolean, integer, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, timestamp, text, boolean, uuid } from "drizzle-orm/pg-core";
 import { categories } from "./category.js";
 
 export const tickets = pgTable("tickets", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  categoryId: integer()
+  id: uuid("id").primaryKey().defaultRandom(),
+  categoryId: uuid("categoryId")
     .notNull()
     .references(() => categories.id, { onDelete: "cascade" }),
   title: varchar({ length: 255 }).notNull(),

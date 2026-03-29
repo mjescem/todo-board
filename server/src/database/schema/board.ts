@@ -1,10 +1,10 @@
-import { integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, varchar, timestamp, uuid } from "drizzle-orm/pg-core";
 import { users } from "./user.js";
 
 export const boards = pgTable("boards", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  id: uuid("id").primaryKey().defaultRandom(),
   title: varchar({ length: 255 }).notNull(),
-  ownerId: integer()
+  ownerId: uuid("ownerId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp().notNull().defaultNow(),
