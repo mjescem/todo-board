@@ -1,4 +1,4 @@
-import type { User } from "@/features/auth/authSlice";
+import { logout, type User } from "@/features/auth/authSlice";
 import { useAppDispatch } from "@/app/hooks";
 import { Bell, LayoutDashboard, LogOut, Plus } from "lucide-react";
 import { openCreateBoardDialog } from "@/features/global/globalSlice";
@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 type Props = { user: User | null };
 
 const Header: React.FC<Props> = ({ user }) => {
-  const dispatch = useAppDispatch();
+    const dispatch = useAppDispatch();
 
   return (
     <header className="flex h-14 justify-between border-b bg-white px-6">
@@ -16,9 +16,7 @@ const Header: React.FC<Props> = ({ user }) => {
           <div className="rounded-sm bg-primary p-1 text-white">
             <LayoutDashboard size={18} />
           </div>
-          <h5 className="font-bold text-primary text-xl">
-            Todo Board
-          </h5>
+          <h5 className="font-bold text-primary text-xl">Todo Board</h5>
         </div>
         <Button
           onClick={() => dispatch(openCreateBoardDialog())}
@@ -43,7 +41,10 @@ const Header: React.FC<Props> = ({ user }) => {
             {user?.name}
           </div>
         </div>
-        <button className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer ml-2">
+        <button
+          onClick={() => dispatch(logout())}
+          className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer ml-2"
+        >
           <LogOut size={20} />
         </button>
       </div>
