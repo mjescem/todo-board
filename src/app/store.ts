@@ -1,5 +1,7 @@
 import { authApi } from "@/features/auth/authApi";
 import authReducer from "@/features/auth/authSlice";
+import { boardsApi } from "@/features/boards/boardsApi";
+import globalReducer from "@/features/global/globalSlice"
 import { configureStore } from "@reduxjs/toolkit";
 import {
   persistStore,
@@ -23,14 +25,16 @@ const persistedAuthReducer = persistReducer(persistConfig, authReducer);
 export const store = configureStore({
   reducer: {
     [authApi.reducerPath]: authApi.reducer,
+    [boardsApi.reducerPath]: boardsApi.reducer,
     auth: persistedAuthReducer,
+    global: globalReducer
   },
   middleware: (getDefaultMiddleware) => {
     return getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(authApi.middleware);
+    }).concat(authApi.middleware, boardsApi.middleware);
   },
 });
 
