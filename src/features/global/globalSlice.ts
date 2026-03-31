@@ -1,19 +1,27 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 interface GlobalState {
   createBoardDialog: {
     isOpen: boolean;
   };
+  boardSelectorDialog: {
+    isOpen: boolean;
+  };
+  activeBoardId: string | null;
 }
 
 const initialState: GlobalState = {
   createBoardDialog: {
     isOpen: false,
   },
+  boardSelectorDialog: {
+    isOpen: false,
+  },
+  activeBoardId: null,
 };
 
 const globalSlice = createSlice({
-  name: "ui",
+  name: "global",
   initialState,
   reducers: {
     openCreateBoardDialog: (state) => {
@@ -22,9 +30,24 @@ const globalSlice = createSlice({
     closeCreateBoardDialog: (state) => {
       state.createBoardDialog.isOpen = false;
     },
+    openBoardSelectorDialog: (state) => {
+      state.boardSelectorDialog.isOpen = true;
+    },
+    closeBoardSelectorDialog: (state) => {
+      state.boardSelectorDialog.isOpen = false;
+    },
+    setActiveBoard: (state, action: PayloadAction<string>) => {
+      state.activeBoardId = action.payload;
+    },
   },
 });
 
-export const { openCreateBoardDialog, closeCreateBoardDialog } = globalSlice.actions;
+export const {
+  openCreateBoardDialog,
+  closeCreateBoardDialog,
+  openBoardSelectorDialog,
+  closeBoardSelectorDialog,
+  setActiveBoard,
+} = globalSlice.actions;
 
 export default globalSlice.reducer;
