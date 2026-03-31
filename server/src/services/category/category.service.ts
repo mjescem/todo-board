@@ -22,7 +22,7 @@ export async function getCategories(params: GetCategoriesParams) {
 }
 
 export async function createCategory(params: CreateCategoryParams) {
-  const { boardId, ownerId, title, color } = createCategorySchema.parse(params);
+  const { boardId, ownerId, title } = createCategorySchema.parse(params);
   const [board] = await db
     .select()
     .from(boards)
@@ -37,7 +37,7 @@ export async function createCategory(params: CreateCategoryParams) {
 
   const [category] = await db
     .insert(categories)
-    .values({ boardId, title, color, order: existing.length })
+    .values({ boardId, title, order: existing.length })
     .returning();
   return category;
 }

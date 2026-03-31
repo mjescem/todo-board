@@ -13,6 +13,7 @@ export const createTicketSchema = z.object({
     description: z.string().optional(),
     expiryDate: z.string().optional().nullable(),
     isDraft: z.boolean().optional(),
+    color: z.string().optional().nullable(),
   }),
 });
 
@@ -25,13 +26,15 @@ export const updateTicketSchema = z.object({
       description: z.string().optional(),
       expiryDate: z.string().optional().nullable(),
       isDraft: z.boolean().optional(),
+      color: z.string().optional().nullable(),
     })
     .refine(
       (data) =>
         data.title !== undefined ||
         data.description !== undefined ||
         data.expiryDate !== undefined ||
-        data.isDraft !== undefined,
+        data.isDraft !== undefined ||
+        data.color !== undefined,
       {
         message: "At least one property must be updated",
       },
