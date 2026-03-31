@@ -7,7 +7,6 @@ export const categories = pgTable("categories", {
     .notNull()
     .references(() => boards.id, { onDelete: "cascade" }),
   title: varchar({ length: 255 }).notNull(),
-  color: varchar({ length: 50 }).notNull().default("#6366f1"),
   order: integer().notNull().default(0),
   createdAt: timestamp().notNull().defaultNow(),
 });

@@ -78,8 +78,7 @@ Content-Type: application/json
 
 {
   "boardId": "{{boardId}}",
-  "title": "To Do",
-  "color": "#6366f1"
+  "title": "To Do"
 }
 
 ###
@@ -92,8 +91,7 @@ Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "title": "In Progress",
-  "color": "#ec4899"
+  "title": "In Progress"
 }
 
 ###
@@ -121,7 +119,8 @@ Content-Type: application/json
   "categoryId": "{{categoryId}}",
   "title": "Design UI Mockups",
   "description": "Create high-fidelity mockups for the dashboard.",
-  "isDraft": false
+  "isDraft": false,
+  "color": "#FF5733"
 }
 
 ###

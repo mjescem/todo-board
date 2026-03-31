@@ -43,6 +43,7 @@ export async function createTicket(params: CreateTicketParams) {
       description: data.description ?? "",
       isDraft: data.isDraft ?? true,
       expiryDate: data.expiryDate ? new Date(data.expiryDate) : null,
+      color: data.color ?? null,
       order: existing.length,
     })
     .returning();
@@ -70,6 +71,7 @@ export async function updateTicket(params: UpdateTicketParams) {
       ...(data.expiryDate !== undefined && {
         expiryDate: data.expiryDate ? new Date(data.expiryDate) : null,
       }),
+      ...(data.color !== undefined && { color: data.color }),
       updatedAt: new Date(),
     })
     .where(eq(tickets.id, id))

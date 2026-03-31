@@ -10,6 +10,7 @@ export const tickets = pgTable("tickets", {
   description: text().notNull().default(""),
   isDraft: boolean().notNull().default(true),
   expiryDate: timestamp(),
+  color: varchar({ length: 50 }),
   order: integer().notNull().default(0),
   createdAt: timestamp().notNull().defaultNow(),
   updatedAt: timestamp().notNull().defaultNow(),

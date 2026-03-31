@@ -23,13 +23,12 @@ export async function getCategoriesHandler(req: Request, res: Response) {
 
 export async function createCategoryHandler(req: Request, res: Response) {
   try {
-    const { boardId, title, color } = req.body;
+    const { boardId, title } = req.body;
 
     const result = await createCategory({
       boardId,
       ownerId: req.user!.userId,
       title,
-      color,
     });
     res.status(201).json(result);
   } catch (error) {
@@ -49,11 +48,11 @@ export async function createCategoryHandler(req: Request, res: Response) {
 export async function updateCategoryHandler(req: Request, res: Response) {
   try {
     const id = req.params.id as string;
-    const { title, color } = req.body;
+    const { title } = req.body;
     const result = await updateCategory({
       id,
       ownerId: req.user!.userId,
-      data: { title, color },
+      data: { title },
     });
     res.status(200).json(result);
   } catch (error) {

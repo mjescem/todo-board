@@ -9,7 +9,6 @@ CREATE TABLE "categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"boardId" uuid NOT NULL,
 	"title" varchar(255) NOT NULL,
-	"color" varchar(50) DEFAULT '#6366f1' NOT NULL,
 	"order" integer DEFAULT 0 NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
@@ -21,6 +20,7 @@ CREATE TABLE "tickets" (
 	"description" text DEFAULT '' NOT NULL,
 	"isDraft" boolean DEFAULT true NOT NULL,
 	"expiryDate" timestamp,
+	"color" varchar(50),
 	"order" integer DEFAULT 0 NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL
