@@ -1,8 +1,7 @@
 import { logout, type User } from "@/features/auth/authSlice";
 import { useAppDispatch } from "@/app/hooks";
-import { Bell, LayoutDashboard, LogOut, Plus } from "lucide-react";
-import { openCreateBoardDialog } from "@/features/global/globalSlice";
-import { Button } from "./ui/button";
+import { Bell, LayoutDashboard, LogOut } from "lucide-react";
+import { openBoardSelectorDialog } from "@/features/global/globalSlice";
 
 type Props = { user: User | null };
 
@@ -13,20 +12,14 @@ const Header: React.FC<Props> = ({ user }) => {
     <header className="flex h-14 justify-between border-b bg-white px-6">
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3">
-          <div className="rounded-sm bg-primary p-1 text-white">
+          <div
+            className="rounded-sm bg-primary p-1 text-white"
+            onClick={() => dispatch(openBoardSelectorDialog())}
+          >
             <LayoutDashboard size={18} />
           </div>
           <h5 className="font-bold text-primary text-xl">Todo Board</h5>
         </div>
-        <Button
-          onClick={() => dispatch(openCreateBoardDialog())}
-          variant="secondary"
-          size="lg"
-          className="flex items-center gap-2 rounded-md bg-primary/10 text-sm font-semibold text-primary hover:bg-primary/20 cursor-pointer"
-        >
-          <Plus size={16} strokeWidth={2} />
-          <span>Create</span>
-        </Button>
       </div>
 
       <div className="flex items-center gap-4">
