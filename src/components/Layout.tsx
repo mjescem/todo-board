@@ -2,8 +2,9 @@ import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import Header from "./Header";
 import { Outlet } from "react-router-dom";
 import CreateBoardDialog, { type BoardForm } from "./dialog/CreateBoardDialog";
-import { closeCreateBoardDialog } from "@/features/global/globalSlice";
+import { closeCreateBoardDialog, setActiveBoard } from "@/features/global/globalSlice";
 import { useCreateBoardMutation } from "@/features/boards/boardsApi";
+import BoardSelectorModal from "./dialog/BoardSelectorDialog";
 
 function Layout(){
   const dispatch = useAppDispatch();
@@ -13,7 +14,8 @@ function Layout(){
 
   const handleCreateBoard = async (data: BoardForm) => {
      try {
-       await createBoard(data).unwrap();
+       const newBoard = await createBoard(data).unwrap();
+       dispatch(setActiveBoard(newBoard.id));
        dispatch(closeCreateBoardDialog());
      } catch (error) {
        console.error("Failed to create board:", error);
@@ -30,6 +32,7 @@ function Layout(){
         onClose={() => dispatch(closeCreateBoardDialog())}
         onCreate={handleCreateBoard}
       />
+      <BoardSelectorModal />
     </main>
   );
 }

@@ -1,7 +1,7 @@
 import { authApi } from "@/features/auth/authApi";
 import authReducer from "@/features/auth/authSlice";
 import { boardsApi } from "@/features/boards/boardsApi";
-import globalReducer from "@/features/global/globalSlice"
+import globalReducer from "@/features/global/globalSlice";
 import { configureStore } from "@reduxjs/toolkit";
 import {
   persistStore,
@@ -15,19 +15,29 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/es/storage";
 
-const persistConfig = {
+const authPersistConfig = {
   key: "auth",
   storage,
 };
 
-const persistedAuthReducer = persistReducer(persistConfig, authReducer);
+const globalPersistConfig = {
+  key: "global",
+  storage,
+  whitelist: ["activeBoardId", "boardSelectorDialog"],
+};
+
+const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
+const persistedGlobalReducer = persistReducer(
+  globalPersistConfig,
+  globalReducer,
+);
 
 export const store = configureStore({
   reducer: {
     [authApi.reducerPath]: authApi.reducer,
     [boardsApi.reducerPath]: boardsApi.reducer,
     auth: persistedAuthReducer,
-    global: globalReducer
+    global: persistedGlobalReducer,
   },
   middleware: (getDefaultMiddleware) => {
     return getDefaultMiddleware({
