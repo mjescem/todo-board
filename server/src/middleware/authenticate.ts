@@ -8,7 +8,7 @@ if (!JWT_SECRET) {
 }
 
 interface TokenPayload extends JwtPayload {
-  userId: number;
+  userId: string;
 }
 
 export function authenticate(

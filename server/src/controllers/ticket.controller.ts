@@ -22,11 +22,11 @@ export async function getTicketsHandler(req: Request, res: Response) {
 
 export async function createTicketHandler(req: Request, res: Response) {
   try {
-    const {categoryId, title, description, isDraft, expiryDate } = req.body;
+    const {categoryId, title, description, isDraft, expiryDate, color } = req.body;
     const result = await createTicket({
       categoryId,
       ownerId: req.user!.userId,
-      data: { title, description, isDraft, expiryDate },
+      data: { title, description, isDraft, expiryDate, color },
     });
     res.status(201).json(result);
   } catch (error) {
@@ -45,11 +45,11 @@ export async function createTicketHandler(req: Request, res: Response) {
 export async function updateTicketHandler(req: Request, res: Response) {
   try {
     const id = req.params.id as string;
-    const { title, description, isDraft, expiryDate } = req.body;
+    const { title, description, isDraft, expiryDate, color } = req.body;
     const result = await updateTicket({
       id,
       ownerId: req.user!.userId,
-      data: { title, description, isDraft, expiryDate },
+      data: { title, description, isDraft, expiryDate, color },
     });
     res.status(200).json(result);
   } catch (error) {

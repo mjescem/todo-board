@@ -1,5 +1,5 @@
 {
-  "id": "f6eae43f-34be-4b21-b05b-86c08142ded2",
+  "id": "1a62d50a-a6a3-4b4e-9fe1-f1469916eb90",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -80,13 +80,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "color": {
-          "name": "color",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'#6366f1'"
-        },
         "order": {
           "name": "order",
           "type": "integer",
@@ -164,6 +157,12 @@
         "expiryDate": {
           "name": "expiryDate",
           "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "color": {
+          "name": "color",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },
