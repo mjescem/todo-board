@@ -4,7 +4,8 @@ import { Outlet } from "react-router-dom";
 import CreateBoardDialog, { type BoardForm } from "./dialog/CreateBoardDialog";
 import { closeCreateBoardDialog, setActiveBoard } from "@/features/global/globalSlice";
 import { useCreateBoardMutation } from "@/features/boards/boardsApi";
-import BoardSelectorModal from "./dialog/BoardSelectorDialog";
+import BoardSelectorDialog from "./dialog/BoardSelectorDialog";
+import TicketDetailsDialog from "./dialog/TicketDetailsDialog";
 
 function Layout(){
   const dispatch = useAppDispatch();
@@ -32,7 +33,8 @@ function Layout(){
         onClose={() => dispatch(closeCreateBoardDialog())}
         onCreate={handleCreateBoard}
       />
-      <BoardSelectorModal />
+      <BoardSelectorDialog />
+      <TicketDetailsDialog />
     </main>
   );
 }

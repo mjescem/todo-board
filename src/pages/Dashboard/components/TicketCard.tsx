@@ -1,12 +1,16 @@
+import { useAppDispatch } from "@/app/hooks";
+import { openCardDetail } from "@/features/global/globalSlice";
 import type { Ticket } from "@/features/tickets/ticketsApi";
 import { AlignLeft } from "lucide-react";
 
 type Props = { ticket: Ticket };
 
 const TicketCard: React.FC<Props> = ({ ticket }) => {
+  const dispatch = useAppDispatch();
+
   return (
     <div
-      key={ticket.id}
+      onClick={() => dispatch(openCardDetail(ticket.id))}
       className="cursor-pointer rounded-lg bg-white/20 p-3 shadow-sm hover:ring-2 hover:ring-blue-500"
     >
       {ticket.color && (
