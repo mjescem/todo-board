@@ -7,6 +7,10 @@ interface GlobalState {
   boardSelectorDialog: {
     isOpen: boolean;
   };
+  cardDetailDialog: {
+    isOpen: boolean;
+    ticketId: string | null;
+  };
   activeBoardId: string | null;
 }
 
@@ -16,6 +20,10 @@ const initialState: GlobalState = {
   },
   boardSelectorDialog: {
     isOpen: false,
+  },
+  cardDetailDialog: {
+    isOpen: false,
+    ticketId: null,
   },
   activeBoardId: null,
 };
@@ -36,6 +44,14 @@ const globalSlice = createSlice({
     closeBoardSelectorDialog: (state) => {
       state.boardSelectorDialog.isOpen = false;
     },
+    openCardDetail: (state, action: PayloadAction<string>) => {
+      state.cardDetailDialog.isOpen = true;
+      state.cardDetailDialog.ticketId = action.payload;
+    },
+    closeCardDetail: (state) => {
+      state.cardDetailDialog.isOpen = false;
+      state.cardDetailDialog.ticketId = null;
+    },
     setActiveBoard: (state, action: PayloadAction<string>) => {
       state.activeBoardId = action.payload;
     },
@@ -47,6 +63,8 @@ export const {
   closeCreateBoardDialog,
   openBoardSelectorDialog,
   closeBoardSelectorDialog,
+  openCardDetail,
+  closeCardDetail,
   setActiveBoard,
 } = globalSlice.actions;
 
