@@ -3,7 +3,7 @@ import { db } from "../../database/index.js";
 import { tickets } from "../../database/schema/ticket.js";
 import { categories } from "../../database/schema/category.js";
 import { boards } from "../../database/schema/board.js";
-import { createTicketSchema, deleteTicketSchema, getTicketsSchema, updateTicketSchema, type CreateTicketParams, type DeleteTicketParams, type GetTicketsParams, type UpdateTicketParams } from "./ticketSchema.js";
+import { createTicketSchema, deleteTicketSchema, getTicketSchema, getTicketsSchema, updateTicketSchema, type CreateTicketParams, type DeleteTicketParams, type GetTicketParams, type GetTicketsParams, type UpdateTicketParams } from "./ticketSchema.js";
 
 async function verifyCategoryOwnership(categoryId: string, ownerId: string) {
   const [category] = await db
@@ -24,6 +24,21 @@ export async function getTickets(params: GetTicketsParams) {
     .from(tickets)
     .where(eq(tickets.categoryId, categoryId))
     .orderBy(tickets.order);
+}
+
+
+export async function getTicket(params: GetTicketParams) {
+  const { id, ownerId } = getTicketSchema.parse(params);
+
+  const [ticket] = await db
+    .select({ ticket: tickets })
+    .from(tickets)
+    .innerJoin(categories, eq(tickets.categoryId, categories.id))
+    .innerJoin(boards, eq(categories.boardId, boards.id))
+    .where(and(eq(tickets.id, id), eq(boards.ownerId, ownerId)));
+
+  if (!ticket) throw new Error("Ticket not found");
+  return ticket.ticket;
 }
 
 export async function createTicket(params: CreateTicketParams) {
