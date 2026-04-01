@@ -1,56 +1,67 @@
-import { Plus, Trash2 } from "lucide-react";
-import TaskCard from "./TaskCard";
+import { Plus, Trash2, X } from "lucide-react";
 import {
   useDeleteCategoryMutation,
   useUpdateCategoryMutation,
   type Category,
 } from "@/features/categories/categoriesApi";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog";
+import {
+  useCreateTicketMutation,
+  useGetTicketsQuery,
+} from "@/features/tickets/ticketsApi";
+import TicketCard from "./TicketCard";
 
 type Props = {
   category: Category;
 };
 
-const tasks = [
-  {
-    id: "t1",
-    categoryId: "c1",
-    title: "This is a test",
-    color: null,
-    description: "This is a test",
-    isDone: false,
-  },
-  {
-    id: "t2",
-    categoryId: "c2",
-    title: "create sign up page]",
-    color: "bg-[#4bce97]",
-    description: "This is a test",
-    isDone: true,
-  },
-  {
-    id: "t3",
-    categoryId: "c3",
-    title: "adadadasda",
-    color: "bg-[#f87462]",
-    description: "",
-    isDone: false,
-  },
-];
-
 const CategoryCard: React.FC<Props> = ({ category }) => {
+  const { data: tickets = [] } = useGetTicketsQuery({
+    categoryId: category.id,
+  });
+  const [createTicket, { isLoading: isCreating }] = useCreateTicketMutation();
   const [updateCategory] = useUpdateCategoryMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [titleValue, setTitleValue] = useState(category.title);
+
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const [newCardTitle, setNewCardTitle] = useState("");
+
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
+  const addCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isAddingCard &&
+        addCardRef.current &&
+        !addCardRef.current.contains(event.target as Node)
+      ) {
+        setIsAddingCard(false);
+        setNewCardTitle("");
+      }
+    };
+
+    if (isAddingCard) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isAddingCard]);
+
   const handleUpdateTitle = async () => {
-    if (!titleValue.trim() || titleValue === category.title) {
+    const trimmedTitle = titleValue.trim();
+
+    if (!trimmedTitle || trimmedTitle === category.title) {
+      setTitleValue(category.title);
       setIsEditing(false);
       return;
     }
@@ -58,7 +69,7 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
     try {
       await updateCategory({
         id: category.id,
-        title: titleValue.trim(),
+        title: trimmedTitle,
       }).unwrap();
       setIsEditing(false);
     } catch (error) {
@@ -77,6 +88,30 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
     }
   };
 
+  const handleAddCard = async () => {
+    if (!newCardTitle.trim()) return;
+    try {
+      await createTicket({
+        categoryId: category.id,
+        title: newCardTitle.trim(),
+      }).unwrap();
+      setNewCardTitle("");
+      setIsAddingCard(false);
+    } catch (error) {
+      console.error("Failed to create ticket:", error);
+    }
+  };
+
+  const handleCardKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleAddCard();
+    } else if (e.key === "Escape") {
+      setIsAddingCard(false);
+      setNewCardTitle("");
+    }
+  };
+
   return (
     <section className="flex flex-col min-w-68 rounded-xl bg-black pb-2">
       <div className="flex items-center px-3 py-3 group cursor-pointer">
@@ -87,7 +122,13 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
               value={titleValue}
               onChange={(e) => setTitleValue(e.target.value)}
               onBlur={handleUpdateTitle}
-              onKeyDown={(e) => e.key === "Enter" && handleUpdateTitle()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleUpdateTitle();
+                if (e.key === "Escape") {
+                  setTitleValue(category.title);
+                  setIsEditing(false);
+                }
+              }}
               className="h-7 px-1 text-sm font-bold text-white bg-white/10 border-none"
             />
           ) : (
@@ -109,21 +150,59 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
         </Button>
       </div>
       <div className="flex-1 px-2 space-y-2.5">
-        {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+        {tickets.map((ticket) => (
+          <TicketCard key={ticket.id} ticket={ticket} />
         ))}
       </div>
       <div className="px-2 pt-2">
-        <div className="flex gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-white hover:bg-white/20">
-          <div className="flex items-center gap-2">
+        {isAddingCard ? (
+          <div
+            ref={addCardRef}
+            className="flex flex-col gap-2 rounded-xl bg-[#22272b] p-3 shadow-lg border border-white/5"
+          >
+            <textarea
+              autoFocus
+              placeholder="Enter a title or paste a link"
+              value={newCardTitle}
+              onChange={(e) => setNewCardTitle(e.target.value)}
+              onKeyDown={handleCardKeyDown}
+              className="w-full min-h-16 p-3 text-sm font-medium text-white bg-[#22272b] rounded-xl border-2 border-transparent focus:border-primary outline-none shadow-xl resize-none placeholder:text-gray-500"
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleAddCard}
+                disabled={isCreating || !newCardTitle.trim()}
+                className="bg-primary hover:bg-primary/90 text-white font-semibold h-9 px-3 rounded-md"
+              >
+                {isCreating ? "Adding..." : "Add card"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsAddingCard(false);
+                  setNewCardTitle("");
+                }}
+                className="h-8 w-8 text-white/50 hover:text-white hover:bg-white/10"
+              >
+                <X size={18} />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            onClick={() => setIsAddingCard(true)}
+            className="w-full justify-start gap-2 h-9 px-2 text-sm font-medium text-white hover:text-white hover:bg-white/20"
+          >
             <Plus size={16} />
             <span>Add a card</span>
-          </div>
-        </div>
+          </Button>
+        )}
       </div>
       <ConfirmDialog
         isOpen={isConfirmDialogOpen}
-        onClose={()=> setIsConfirmDialogOpen(false)}
+        onClose={() => setIsConfirmDialogOpen(false)}
         title="Delete this list?"
         description={`Are you sure you want to delete "${category.title}"? This will permanently remove all tickets within this list.`}
         confirmText="Delete"

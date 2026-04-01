@@ -4,7 +4,7 @@ import {
   useGetBoardsQuery,
   useUpdateBoardMutation,
 } from "@/features/boards/boardsApi";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import {
   openBoardSelectorDialog,
@@ -38,11 +38,9 @@ export default function Dashboard() {
   const [newListTitle, setNewListTitle] = useState("");
 
   const isLoading = isBoardsLoading || (activeBoardId && isCategoriesLoading);
+  const addListRef = useRef<HTMLDivElement>(null);
 
-  const activeBoard = useMemo(
-    () => boards.find((b) => b.id === activeBoardId),
-    [boards, activeBoardId],
-  );
+  const activeBoard = boards.find((b) => b.id === activeBoardId)
 
   const handleUpdateTitle = async () => {
     if (
@@ -116,6 +114,27 @@ export default function Dashboard() {
     }
   }, [activeBoard]);
 
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          isAddingList &&
+          addListRef.current &&
+          !addListRef.current.contains(event.target as Node)
+        ) {
+          setIsAddingList(false);
+          setNewListTitle("");
+        }
+      };
+  
+      if (isAddingList) {
+        document.addEventListener("mousedown", handleClickOutside);
+      }
+  
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [isAddingList]);
+
   return (
     <section className="flex-1 overflow-x-auto overflow-y-hidden px-6 py-6">
       <div className="flex items-center justify-between pb-4">
@@ -169,7 +188,10 @@ export default function Dashboard() {
           </>
         )}
         {isAddingList ? (
-          <div className="flex flex-col min-w-72 bg-black rounded-xl p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div
+            ref={addListRef}
+            className="flex flex-col min-w-72 bg-black rounded-xl p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+          >
             <Input
               autoFocus
               placeholder="Enter list name..."

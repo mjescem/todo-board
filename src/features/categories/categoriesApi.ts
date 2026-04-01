@@ -5,13 +5,11 @@ export interface Category {
   id: string;
   boardId: string;
   title: string;
-  color?: string;
 }
 
 export interface CreateCategoryRequest {
   boardId: string;
   title: string;
-  color?: string;
 }
 
 export const categoriesApi = createApi({
@@ -48,7 +46,7 @@ export const categoriesApi = createApi({
     }),
     updateCategory: builder.mutation<
       Category,
-      { id: string; title?: string; color?: string }
+      { id: string; title?: string; }
     >({
       query: ({ id, ...patch }) => ({
         url: `/${id}`,
