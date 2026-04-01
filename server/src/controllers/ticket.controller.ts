@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import * as z from "zod";
-import { createTicket, deleteTicket, getTickets, updateTicket } from "../services/ticket/ticket.service.js";
+import { createTicket, deleteTicket, getTicket, getTickets, updateTicket } from "../services/ticket/ticket.service.js";
 
 export async function getTicketsHandler(req: Request, res: Response) {
   try {
@@ -13,6 +13,24 @@ export async function getTicketsHandler(req: Request, res: Response) {
       return;
     }
     if (error instanceof Error && error.message.includes("unauthorized")) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function getTicketHandler(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+    const result = await getTicket({ id, ownerId: req.user!.userId });
+    res.status(200).json(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error });
+      return;
+    }
+    if (error instanceof Error && error.message.includes("not found")) {
       res.status(404).json({ error: error.message });
       return;
     }

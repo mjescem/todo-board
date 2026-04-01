@@ -11,10 +11,9 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
-
-app.use("/api/boards", authenticate, boardRoutes);
-app.use("/api/categories", authenticate, categoryRoutes);
-app.use("/api/tickets", authenticate, ticketRoutes);
+app.use("/api/boards", boardRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/tickets", ticketRoutes);
 
 const PORT = process.env.PORT || 3001;
 
