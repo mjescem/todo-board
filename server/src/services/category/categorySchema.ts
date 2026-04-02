@@ -35,7 +35,14 @@ export const deleteCategorySchema = z.object({
   ownerId: z.uuid(),
 });
 
+export const reorderCategorySchema = z.object({
+  id: z.uuid("Invalid category ID"),
+  ownerId: z.uuid("Invalid owner ID"),
+  newOrder: z.number().int().min(0, "Order must be positive"),
+});
+
 export type GetCategoriesParams = z.infer<typeof getCategoriesSchema>;
 export type CreateCategoryParams = z.infer<typeof createCategorySchema>;
 export type UpdateCategoryParams = z.infer<typeof updateCategorySchema>;
 export type DeleteCategoryParams = z.infer<typeof deleteCategorySchema>;
+export type ReorderCategoryParams = z.infer<typeof reorderCategorySchema>;
