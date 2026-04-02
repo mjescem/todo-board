@@ -20,6 +20,7 @@ const TicketCard: React.FC<Props> = ({ ticket }) => {
   );
 
   const handleDragStart = (e: React.DragEvent, ticket: Ticket) => {
+    e.stopPropagation();
     e.dataTransfer.setData("ticket", JSON.stringify(ticket));
     e.dataTransfer.effectAllowed = "move";
 

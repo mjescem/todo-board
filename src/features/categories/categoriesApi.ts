@@ -5,6 +5,7 @@ export interface Category {
   id: string;
   boardId: string;
   title: string;
+  order: number;
 }
 
 export interface CreateCategoryRequest {
@@ -44,10 +45,7 @@ export const categoriesApi = createApi({
       }),
       invalidatesTags: [{ type: "Category", id: "LIST" }],
     }),
-    updateCategory: builder.mutation<
-      Category,
-      { id: string; title?: string; }
-    >({
+    updateCategory: builder.mutation<Category, { id: string; title?: string }>({
       query: ({ id, ...patch }) => ({
         url: `/${id}`,
         method: "PATCH",
@@ -62,6 +60,50 @@ export const categoriesApi = createApi({
       }),
       invalidatesTags: [{ type: "Category", id: "LIST" }],
     }),
+    reorderCategory: builder.mutation<
+      Category,
+      { id: string; boardId: string; newOrder: number }
+    >({
+      query: (data) => ({
+        url: "/reorder",
+        method: "POST",
+        body: {
+          id: data.id,
+          newOrder: data.newOrder,
+        },
+      }),
+
+      async onQueryStarted(
+        { id, boardId, newOrder },
+        { dispatch, queryFulfilled },
+      ) {
+        const patchResult = dispatch(
+          categoriesApi.util.updateQueryData(
+            "getCategories",
+            { boardId },
+            (draft) => {
+              const categoryIndex = draft.findIndex((c) => c.id === id);
+              if (categoryIndex === -1) return;
+
+              const [removed] = draft.splice(categoryIndex, 1);
+              const insertIndex = Math.min(newOrder, draft.length);
+              draft.splice(insertIndex, 0, removed);
+              draft.forEach((c, idx) => {
+                c.order = idx;
+              });
+            },
+          ),
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
+
+      invalidatesTags: ["Category"],
+    }),
   }),
 });
 
@@ -70,4 +112,5 @@ export const {
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,
+  useReorderCategoryMutation
 } = categoriesApi;

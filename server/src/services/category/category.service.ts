@@ -1,7 +1,7 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../../database/index.js";
 import { boards } from "../../database/schema/board.js";
-import { createCategorySchema, deleteCategorySchema, getCategoriesSchema, updateCategorySchema, type CreateCategoryParams, type DeleteCategoryParams, type GetCategoriesParams, type UpdateCategoryParams } from "./categorySchema.js";
+import { createCategorySchema, deleteCategorySchema, getCategoriesSchema, reorderCategorySchema, updateCategorySchema, type CreateCategoryParams, type DeleteCategoryParams, type GetCategoriesParams, type ReorderCategoryParams, type UpdateCategoryParams } from "./categorySchema.js";
 import { categories } from "../../database/schema/category.js";
 
 export async function getCategories(params: GetCategoriesParams) {
@@ -76,4 +76,57 @@ export async function deleteCategory(params: DeleteCategoryParams) {
     .where(eq(categories.id, id))
     .returning();
   return deleted;
+}
+
+export async function reorderCategory(params: ReorderCategoryParams) {
+  const { id, ownerId, newOrder } = reorderCategorySchema.parse(params);
+
+  return await db.transaction(async (tx) => {
+    const [category] = await tx
+      .select({ category: categories, ownerId: boards.ownerId })
+      .from(categories)
+      .innerJoin(boards, eq(categories.boardId, boards.id))
+      .where(and(eq(categories.id, id), eq(boards.ownerId, ownerId)));
+
+    if (!category) throw new Error("Category not found");
+
+    const boardId = category.category.boardId;
+    const oldOrder = category.category.order;
+
+    if (oldOrder === newOrder) return category.category;
+
+    if (newOrder > oldOrder) {
+      await tx
+        .update(categories)
+        .set({ order: sql`${categories.order} - 1` })
+        .where(
+          and(
+            eq(categories.boardId, boardId),
+            sql`${categories.order} > ${oldOrder}`,
+            sql`${categories.order} <= ${newOrder}`,
+          ),
+        );
+    } else {
+      await tx
+        .update(categories)
+        .set({ order: sql`${categories.order} + 1` })
+        .where(
+          and(
+            eq(categories.boardId, boardId),
+            sql`${categories.order} >= ${newOrder}`,
+            sql`${categories.order} < ${oldOrder}`,
+          ),
+        );
+    }
+
+    const [updated] = await tx
+      .update(categories)
+      .set({
+        order: newOrder,
+      })
+      .where(eq(categories.id, id))
+      .returning();
+
+    return updated;
+  });
 }

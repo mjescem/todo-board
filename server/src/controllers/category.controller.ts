@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import * as z from "zod";
-import { createCategory, deleteCategory, getCategories, updateCategory } from "../services/category/category.service.js";
+import { createCategory, deleteCategory, getCategories, reorderCategory, updateCategory } from "../services/category/category.service.js";
 
 export async function getCategoriesHandler(req: Request, res: Response) {
   try {
@@ -81,6 +81,34 @@ export async function deleteCategoryHandler(req: Request, res: Response) {
       return;
     }
     if (error instanceof Error && error.message.includes("unauthorized")) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function reorderCategoryHandler(req: Request, res: Response) {
+  try {
+    const { id, newOrder } = req.body;
+
+    const result = await reorderCategory({
+      id,
+      ownerId: req.user!.userId,
+      newOrder,
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    console.info(error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error });
+      return;
+    }
+    if (
+      error instanceof Error &&
+      (error.message.includes("not found") ||
+        error.message.includes("Category not found"))
+    ) {
       res.status(404).json({ error: error.message });
       return;
     }
