@@ -51,8 +51,16 @@ export const deleteTicketSchema = z.object({
   ownerId: z.uuid("Invalid owner ID"),
 });
 
+export const reorderTicketSchema = z.object({
+  id: z.uuid("Invalid ticket ID"),
+  ownerId: z.uuid("Invalid owner ID"),
+  destinationCategoryId: z.uuid("Invalid destination category ID"),
+  newOrder: z.number().min(0, "New order must be a non-negative number"),
+});
+
 export type GetTicketsParams = z.infer<typeof getTicketsSchema>;
 export type GetTicketParams = z.infer<typeof getTicketSchema>;
 export type CreateTicketParams = z.infer<typeof createTicketSchema>;
 export type UpdateTicketParams = z.infer<typeof updateTicketSchema>;
 export type DeleteTicketParams = z.infer<typeof deleteTicketSchema>;
+export type ReorderTicketParams = z.infer<typeof reorderTicketSchema>;

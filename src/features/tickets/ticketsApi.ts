@@ -8,6 +8,7 @@ export interface Ticket {
   description?: string;
   isDone: boolean;
   color?: string | null;
+  order: number;
 }
 
 export interface CreateTicketRequest {
@@ -77,6 +78,84 @@ export const ticketsApi = createApi({
       }),
       invalidatesTags: [{ type: "Ticket", id: "TASK" }],
     }),
+    reorderTicket: builder.mutation<
+      Ticket,
+      {
+        id: string;
+        ticket: Ticket;
+        sourceCategoryId: string;
+        destinationCategoryId: string;
+        newOrder: number;
+      }
+    >({
+      query: (body) => ({
+        url: "/reorder",
+        method: "POST",
+        body: {
+          id: body.id,
+          destinationCategoryId: body.destinationCategoryId,
+          newOrder: body.newOrder,
+        },
+      }),
+
+      async onQueryStarted(
+        { id, ticket, sourceCategoryId, destinationCategoryId, newOrder },
+        { dispatch, queryFulfilled },
+      ) {
+        const patchSource = dispatch(
+          ticketsApi.util.updateQueryData(
+            "getTickets",
+            { categoryId: sourceCategoryId },
+            (draft) => {
+              const ticketIndex = draft.findIndex((t) => t.id === id);
+              if (ticketIndex === -1) return;
+
+              const [removed] = draft.splice(ticketIndex, 1);
+
+              if (sourceCategoryId === destinationCategoryId) {
+                const insertIndex = Math.min(newOrder, draft.length);
+                draft.splice(insertIndex, 0, removed);
+                draft.forEach((t, idx) => {
+                  t.order = idx;
+                });
+              }
+            },
+          ),
+        );
+
+        let patchDestination;
+        if (sourceCategoryId !== destinationCategoryId) {
+          patchDestination = dispatch(
+            ticketsApi.util.updateQueryData(
+              "getTickets",
+              { categoryId: destinationCategoryId },
+              (draft) => {
+                const updatedTicket = {
+                  ...ticket,
+                  categoryId: destinationCategoryId,
+                  order: newOrder,
+                };
+
+                const insertIndex = Math.min(newOrder, draft.length);
+                draft.splice(insertIndex, 0, updatedTicket);
+                draft.forEach((t, idx) => {
+                  t.order = idx;
+                });
+              },
+            ),
+          );
+        }
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchSource.undo();
+          patchDestination?.undo();
+        }
+      },
+
+      invalidatesTags: ["Ticket"],
+    }),
   }),
 });
 
@@ -86,4 +165,5 @@ export const {
   useCreateTicketMutation,
   useUpdateTicketMutation,
   useDeleteTicketMutation,
+  useReorderTicketMutation,
 } = ticketsApi;
