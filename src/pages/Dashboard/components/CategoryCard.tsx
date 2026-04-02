@@ -11,6 +11,8 @@ import ConfirmDialog from "@/components/dialog/ConfirmDialog";
 import {
   useCreateTicketMutation,
   useGetTicketsQuery,
+  useReorderTicketMutation,
+  type Ticket,
 } from "@/features/tickets/ticketsApi";
 import TicketCard from "./TicketCard";
 
@@ -25,6 +27,7 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
   const [createTicket, { isLoading: isCreating }] = useCreateTicketMutation();
   const [updateCategory] = useUpdateCategoryMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
+  const [reorderTicket] = useReorderTicketMutation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [titleValue, setTitleValue] = useState(category.title);
@@ -33,6 +36,7 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
   const [newCardTitle, setNewCardTitle] = useState("");
 
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const addCardRef = useRef<HTMLDivElement>(null);
 
@@ -112,8 +116,53 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (tickets.length === 0) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const currentTarget = e.currentTarget as HTMLElement;
+    const relatedTarget = e.relatedTarget as Node | null;
+    if (!currentTarget.contains(relatedTarget)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    if (tickets.length > 0) return;
+
+    const draggedTicketData = e.dataTransfer.getData("ticket");
+    if (!draggedTicketData) return;
+
+    const draggedTicket: Ticket = JSON.parse(draggedTicketData);
+    if (draggedTicket.categoryId === category.id) return;
+
+    try {
+      await reorderTicket({
+        id: draggedTicket.id,
+        ticket: draggedTicket,
+        sourceCategoryId: draggedTicket.categoryId,
+        destinationCategoryId: category.id,
+        newOrder: 0,
+      }).unwrap();
+    } catch (error) {
+      console.error("Failed to move ticket to empty category:", error);
+    }
+  };
+
   return (
-    <section className="flex flex-col min-w-68 rounded-xl bg-black pb-2">
+    <section
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className="flex flex-col min-w-68 rounded-xl bg-black pb-2 transition-all duration-200"
+    >
       <div className="flex items-center px-3 py-3 group cursor-pointer">
         <div className="flex-1">
           {isEditing ? (
@@ -149,10 +198,13 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
           <Trash2 size={16} />
         </Button>
       </div>
-      <div className="flex-1 px-2 space-y-2.5">
+      <div className="flex-1 px-2">
         {tickets.map((ticket) => (
           <TicketCard key={ticket.id} ticket={ticket} />
         ))}
+        {isDragOver && tickets.length === 0 && (
+          <div className="w-full min-h-15 bg-blue-500/15 border-2 border-dashed border-blue-500/80 rounded-lg pointer-events-none transition-all duration-200" />
+        )}
       </div>
       <div className="px-2 pt-2">
         {isAddingCard ? (
