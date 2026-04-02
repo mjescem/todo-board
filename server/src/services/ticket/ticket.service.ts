@@ -1,9 +1,22 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../../database/index.js";
 import { tickets } from "../../database/schema/ticket.js";
 import { categories } from "../../database/schema/category.js";
 import { boards } from "../../database/schema/board.js";
-import { createTicketSchema, deleteTicketSchema, getTicketSchema, getTicketsSchema, updateTicketSchema, type CreateTicketParams, type DeleteTicketParams, type GetTicketParams, type GetTicketsParams, type UpdateTicketParams } from "./ticketSchema.js";
+import {
+  createTicketSchema,
+  deleteTicketSchema,
+  getTicketSchema,
+  getTicketsSchema,
+  reorderTicketSchema,
+  updateTicketSchema,
+  type CreateTicketParams,
+  type DeleteTicketParams,
+  type GetTicketParams,
+  type GetTicketsParams,
+  type ReorderTicketParams,
+  type UpdateTicketParams,
+} from "./ticketSchema.js";
 
 async function verifyCategoryOwnership(categoryId: string, ownerId: string) {
   const [category] = await db
@@ -25,7 +38,6 @@ export async function getTickets(params: GetTicketsParams) {
     .where(eq(tickets.categoryId, categoryId))
     .orderBy(tickets.order);
 }
-
 
 export async function getTicket(params: GetTicketParams) {
   const { id, ownerId } = getTicketSchema.parse(params);
@@ -111,4 +123,83 @@ export async function deleteTicket(params: DeleteTicketParams) {
     .where(eq(tickets.id, id))
     .returning();
   return deleted;
+}
+
+export async function reorderTicket(params: ReorderTicketParams) {
+  const { id, ownerId, destinationCategoryId, newOrder } =
+    reorderTicketSchema.parse(params);
+
+  return await db.transaction(async (tx) => {
+    const [ticket] = await tx
+      .select({ ticket: tickets, ownerId: boards.ownerId })
+      .from(tickets)
+      .innerJoin(categories, eq(tickets.categoryId, categories.id))
+      .innerJoin(boards, eq(categories.boardId, boards.id))
+      .where(and(eq(tickets.id, id), eq(boards.ownerId, ownerId)));
+
+    if (!ticket) throw new Error("Ticket not found");
+
+    const sourceCategoryId = ticket.ticket.categoryId;
+    const oldOrder = ticket.ticket.order;
+
+    if (sourceCategoryId === destinationCategoryId) {
+      if (oldOrder === newOrder) return ticket.ticket;
+
+      if (newOrder > oldOrder) {
+        await tx
+          .update(tickets)
+          .set({ order: sql`${tickets.order} - 1` })
+          .where(
+            and(
+              eq(tickets.categoryId, sourceCategoryId),
+              sql`${tickets.order} > ${oldOrder}`,
+              sql`${tickets.order} <= ${newOrder}`,
+            ),
+          );
+      } else {
+        await tx
+          .update(tickets)
+          .set({ order: sql`${tickets.order} + 1` })
+          .where(
+            and(
+              eq(tickets.categoryId, sourceCategoryId),
+              sql`${tickets.order} >= ${newOrder}`,
+              sql`${tickets.order} < ${oldOrder}`,
+            ),
+          );
+      }
+    } else {
+      await tx
+        .update(tickets)
+        .set({ order: sql`${tickets.order} - 1` })
+        .where(
+          and(
+            eq(tickets.categoryId, sourceCategoryId),
+            sql`${tickets.order} > ${oldOrder}`,
+          ),
+        );
+
+      await tx
+        .update(tickets)
+        .set({ order: sql`${tickets.order} + 1` })
+        .where(
+          and(
+            eq(tickets.categoryId, destinationCategoryId),
+            sql`${tickets.order} >= ${newOrder}`,
+          ),
+        );
+    }
+
+    const [updated] = await tx
+      .update(tickets)
+      .set({
+        categoryId: destinationCategoryId,
+        order: newOrder,
+        updatedAt: new Date(),
+      })
+      .where(eq(tickets.id, id))
+      .returning();
+
+    return updated;
+  });
 }
