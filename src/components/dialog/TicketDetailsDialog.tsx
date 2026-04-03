@@ -16,12 +16,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AlignLeft, MessageSquare, ChevronDown, Tag, Plus } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  AlignLeft,
+  MessageSquare,
+  ChevronDown,
+  Tag,
+  Plus,
+  Clock,
+  X,
+} from "lucide-react";
 import { useState, useEffect, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { colorPickers } from "@/app/constants";
 import { formatRelativeTime } from "@/lib/utils/formatRelativeTime";
+import { format } from "date-fns";
+import DueDatePicker from "../DueDatePicker";
 
 const TicketDetailsDialog = () => {
   const dispatch = useAppDispatch();
@@ -58,6 +73,7 @@ const TicketDetailsDialog = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (ticket) {
@@ -85,9 +101,7 @@ const TicketDetailsDialog = () => {
     }
   };
 
-  const handleDescriptionChange = (
-    e: ChangeEvent<HTMLTextAreaElement>,
-  ) => {
+  const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const newVal = e.target.value;
     setDescription(newVal);
 
@@ -199,6 +213,28 @@ const TicketDetailsDialog = () => {
             marked this card as <span className="font-bold">{meta.to}</span>
           </span>
         );
+      case "expiry_date_changed":
+        if (!meta.from && meta.to) {
+          return (
+            <span>
+              set the due date to{" "}
+              <span className="font-bold">
+                {format(new Date(meta.to), "MMM d 'at' h:mm a")}
+              </span>
+            </span>
+          );
+        }
+        if (meta.from && !meta.to) {
+          return <span>removed the due date</span>;
+        }
+        return (
+          <span>
+            changed the due date to{" "}
+            <span className="font-bold">
+              {format(new Date(meta.to), "MMM d 'at' h:mm a")}
+            </span>
+          </span>
+        );
       default:
         return action;
     }
@@ -250,7 +286,7 @@ const TicketDetailsDialog = () => {
             </div>
 
             <div className="flex flex-1">
-              <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 <div className="flex items-start">
                   <div className="flex-1">
                     <textarea
@@ -270,67 +306,134 @@ const TicketDetailsDialog = () => {
                     />
                   </div>
                 </div>
-                {!ticket.color && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowColorPicker(!showColorPicker)}
-                    className={cn(
-                      "h-8 border-white/10 text-[#b6c2cf] hover:bg-white/10 text-xs gap-2 px-3",
-                      showColorPicker
-                        ? "bg-[#579dff]/20 border-[#579dff]/50"
-                        : "bg-white/5",
-                    )}
-                  >
-                    <Tag size={14} /> Labels
-                  </Button>
-                )}
-                {(showColorPicker || ticket.color) && (
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-bold text-white px-1">
-                      Labels
-                    </h4>
-                    <div className="flex flex-wrap items-center gap-2 px-1">
-                      {ticket.color && (
-                        <div
-                          className={cn(
-                            "h-8 w-16 rounded-[3px] transition-all",
-                            colorPickers.find(
-                              (c) => c.name.toLowerCase() === ticket.color,
-                            )?.color || "bg-gray-500",
-                          )}
-                          title={ticket.color}
-                        />
+                <div className="flex flex-wrap items-center gap-2">
+                  {!ticket.color && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowColorPicker(!showColorPicker)}
+                      className={cn(
+                        "h-8 border-white/10 text-[#b6c2cf] hover:text-[#b6c2cf] hover:bg-white/10 text-xs gap-2 px-3",
+                        showColorPicker
+                          ? "bg-[#579dff]/20 border-[#579dff]/50"
+                          : "bg-white/5",
                       )}
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        onClick={() => setShowColorPicker(!showColorPicker)}
-                        className="h-8 w-8 bg-white/10 hover:bg-white/20 text-[#b6c2cf] border-none"
+                    >
+                      <Tag size={14} /> Labels
+                    </Button>
+                  )}
+                  {!ticket.expiryDate && (
+                    <Popover
+                      open={isPopoverOpen}
+                      onOpenChange={setIsPopoverOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 border-white/10 text-[#b6c2cf] hover:text-[#b6c2cf] bg-white/5 hover:bg-white/10 text-xs gap-2 px-3 data-[state=open]:bg-[#579dff]/20 data-[state=open]:border-[#579dff]/50 data-[state=open]:text-[#b6c2cf]"
+                        >
+                          <Clock className="w-3.5 h-3.5" />
+                          Dates
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-80 p-0 z-50 bg-[#282d33] border-white/10 text-[#b6c2cf]"
+                        align="start"
                       >
-                        <Plus size={16} />
-                      </Button>
-                    </div>
-
-                    {showColorPicker && (
-                      <div className="flex flex-wrap gap-2 px-1 py-1 animate-in slide-in-from-top-1 duration-200">
-                        {colorPickers.map((c) => (
-                          <button
-                            key={c.color}
-                            onClick={() =>
-                              handleColorUpdate(c.name.toLowerCase())
-                            }
-                            className={cn(
-                              "h-8 w-12 rounded-[3px] transition-all hover:opacity-80 active:scale-95",
-                              c.color,
-                              ticket.color === c.name.toLowerCase() &&
-                                "ring-2 ring-white ring-offset-2 ring-offset-[#1d2125]",
-                            )}
-                            title={c.name}
-                          />
-                        ))}
+                        <DueDatePicker
+                          initialDate={ticket.expiryDate ?? undefined}
+                          onSave={async (dateString) => {
+                            await updateTicket({
+                              id: ticket.id,
+                              expiryDate: dateString,
+                            });
+                            setIsPopoverOpen(false);
+                          }}
+                          onRemove={async () => {
+                            await updateTicket({
+                              id: ticket.id,
+                              expiryDate: null,
+                            });
+                            setIsPopoverOpen(false);
+                          }}
+                          onClose={() => setIsPopoverOpen(false)}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </div>
+                {(showColorPicker || ticket.color || ticket.expiryDate) && (
+                  <div className="flex flex-wrap gap-2 px-1">
+                    {(showColorPicker || ticket.color) && (
+                      <div className="space-y-2">
+                        <h4 className="text-[11px] font-bold text-[#9fadbc]">
+                          Labels
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {ticket.color && (
+                            <div
+                              className={cn(
+                                "h-8 w-14 rounded-[3px] transition-all",
+                                colorPickers.find(
+                                  (c) => c.name.toLowerCase() === ticket.color,
+                                )?.color || "bg-gray-500",
+                              )}
+                              title={ticket.color}
+                            />
+                          )}
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={() => setShowColorPicker(!showColorPicker)}
+                            className="h-8 w-8 bg-white/5 hover:bg-white/10 text-[#b6c2cf] border-none rounded-[3px]"
+                          >
+                            <Plus size={16} />
+                          </Button>
+                        </div>
                       </div>
                     )}
+                    {ticket.expiryDate && (
+                      <div className="space-y-2">
+                        <h4 className="text-[11px] font-bold text-[#9fadbc]">
+                          Due Date
+                        </h4>
+                        <div className="flex items-center gap-2 bg-white/5 h-8 px-3 rounded-[3px] border border-white/5">
+                          <span className="text-xs font-medium text-white">
+                            {format(
+                              new Date(ticket.expiryDate),
+                              "MMM d 'at' h:mm a",
+                            )}
+                          </span>
+                          <button
+                            onClick={() =>
+                              updateTicket({ id: ticket.id, expiryDate: null })
+                            }
+                            className="ml-1 text-[#9fadbc] hover:text-white transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {showColorPicker && (
+                  <div className="flex flex-wrap gap-2 px-1 py-2 animate-in slide-in-from-top-1 duration-200 border-t border-white/5 mt-1">
+                    {colorPickers.map((c) => (
+                      <button
+                        key={c.color}
+                        onClick={() => handleColorUpdate(c.name.toLowerCase())}
+                        className={cn(
+                          "h-8 w-12 rounded-[3px] transition-all hover:opacity-80 active:scale-95",
+                          c.color,
+                          ticket.color === c.name.toLowerCase() &&
+                            "ring-2 ring-white ring-offset-2 ring-offset-[#1d2125]",
+                        )}
+                        title={c.name}
+                      />
+                    ))}
                   </div>
                 )}
                 <div className="space-y-4">

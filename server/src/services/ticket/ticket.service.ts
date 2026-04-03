@@ -142,6 +142,23 @@ export async function updateTicket(params: UpdateTicketParams) {
       },
     });
   }
+
+  if (data.expiryDate !== undefined) {
+    if (data.expiryDate !== ticket.ticket.expiryDate?.toISOString()) {
+      await recordActivity({
+        ticketId: id,
+        userId: ownerId,
+        action: "expiry_date_changed",
+        meta: {
+          from: ticket.ticket.expiryDate
+            ? ticket.ticket.expiryDate.toISOString()
+            : "",
+          to: data.expiryDate ?? "",
+        },
+      });
+    }
+  }
+
   if (data.isDraft !== undefined) {
     await recordActivity({
       ticketId: id,
