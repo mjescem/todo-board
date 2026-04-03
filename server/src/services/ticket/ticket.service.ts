@@ -17,6 +17,7 @@ import {
   type ReorderTicketParams,
   type UpdateTicketParams,
 } from "./ticketSchema.js";
+import { recordActivity } from "../ticketActivity/ticketActivity.service.js";
 
 async function verifyCategoryOwnership(categoryId: string, ownerId: string) {
   const [category] = await db
@@ -55,7 +56,7 @@ export async function getTicket(params: GetTicketParams) {
 
 export async function createTicket(params: CreateTicketParams) {
   const { categoryId, ownerId, data } = createTicketSchema.parse(params);
-  await verifyCategoryOwnership(categoryId, ownerId);
+  const category = await verifyCategoryOwnership(categoryId, ownerId);
 
   const existing = await db
     .select()
@@ -74,6 +75,16 @@ export async function createTicket(params: CreateTicketParams) {
       order: existing.length,
     })
     .returning();
+
+  if (!ticket) throw new Error("Failed to create ticket");
+
+  await recordActivity({
+    ticketId: ticket.id,
+    userId: ownerId,
+    action: "created",
+    meta: { categoryName: category.title },
+  });
+
   return ticket;
 }
 
@@ -103,6 +114,46 @@ export async function updateTicket(params: UpdateTicketParams) {
     })
     .where(eq(tickets.id, id))
     .returning();
+
+  if (data.title !== undefined) {
+    await recordActivity({
+      ticketId: id,
+      userId: ownerId,
+      action: "title_changed",
+      meta: { from: ticket.ticket.title, to: data.title },
+    });
+  }
+  if (data.description !== undefined) {
+    await recordActivity({
+      ticketId: id,
+      userId: ownerId,
+      action: "description_changed",
+      meta: {},
+    });
+  }
+  if (data.color !== undefined) {
+    await recordActivity({
+      ticketId: id,
+      userId: ownerId,
+      action: "color_changed",
+      meta: {
+        from: ticket.ticket.color ?? "",
+        to: data.color ?? "",
+      },
+    });
+  }
+  if (data.isDraft !== undefined) {
+    await recordActivity({
+      ticketId: id,
+      userId: ownerId,
+      action: "status_changed",
+      meta: {
+        from: ticket.ticket.isDraft ? "draft" : "published",
+        to: data.isDraft ? "draft" : "published",
+      },
+    });
+  }
+
   return updated;
 }
 
@@ -199,6 +250,28 @@ export async function reorderTicket(params: ReorderTicketParams) {
       })
       .where(eq(tickets.id, id))
       .returning();
+
+    if (sourceCategoryId !== destinationCategoryId) {
+      const [sourceCategory] = await db
+        .select({ title: categories.title })
+        .from(categories)
+        .where(eq(categories.id, sourceCategoryId));
+
+      const [destinationCategory] = await db
+        .select({ title: categories.title })
+        .from(categories)
+        .where(eq(categories.id, destinationCategoryId));
+
+      await recordActivity({
+        ticketId: id,
+        userId: ownerId,
+        action: "category_moved",
+        meta: {
+          from: sourceCategory?.title ?? sourceCategoryId,
+          to: destinationCategory?.title ?? destinationCategoryId,
+        },
+      });
+    }
 
     return updated;
   });

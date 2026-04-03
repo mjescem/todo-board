@@ -4,6 +4,8 @@ import { openCardDetail } from "@/features/global/globalSlice";
 import type { Ticket } from "@/features/tickets/ticketsApi";
 import { useReorderTicketMutation } from "@/features/tickets/ticketsApi";
 import { AlignLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { colorPickers } from "@/app/constants";
 
 type Props = {
   ticket: Ticket;
@@ -127,7 +129,13 @@ const TicketCard: React.FC<Props> = ({ ticket }) => {
         }`}
       >
         {ticket.color && (
-          <div className={`h-2 w-10 rounded-full mb-2 ${ticket.color}`}></div>
+          <div
+            className={cn(
+              "h-2 w-10 rounded-full mb-2",
+              colorPickers.find((c) => c.name.toLowerCase() === ticket.color)
+                ?.color || "bg-gray-500",
+            )}
+          ></div>
         )}
         <div className="flex items-start gap-2">
           <h4 className="text-sm font-medium text-white">{ticket.title}</h4>
