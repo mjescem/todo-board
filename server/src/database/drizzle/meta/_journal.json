@@ -8,6 +8,13 @@
       "when": 1774971055353,
       "tag": "0000_tranquil_speedball",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775190643605,
+      "tag": "0001_real_chronomancer",
+      "breakpoints": true
     }
   ]
 }

@@ -227,7 +227,11 @@ export default function Dashboard() {
             className="flex min-w-60 items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-3 text-white"
           >
             <Plus size={16} />
-            <span className="text-sm font-medium">Add another list</span>
+            {categories.length === 0 ? (
+              <span className="text-sm font-medium">Add a list</span>
+            ) : (
+              <span className="text-sm font-medium">Add another list</span>
+            )}
           </button>
         )}
       </div>

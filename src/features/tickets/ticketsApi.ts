@@ -18,6 +18,21 @@ export interface CreateTicketRequest {
   color?: string | null;
 }
 
+export interface TicketActivity {
+  id: string;
+  ticketId: string;
+  action:
+    | "created"
+    | "title_changed"
+    | "description_changed"
+    | "color_changed"
+    | "category_moved"
+    | "status_changed";
+  meta: Record<string, string>;
+  createdAt: string;
+  user: { name: string; initials: string };
+}
+
 export const ticketsApi = createApi({
   reducerPath: "ticketsApi",
   baseQuery: fetchBaseQuery({
@@ -30,7 +45,7 @@ export const ticketsApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Ticket"],
+  tagTypes: ["Ticket", "TicketActivity"],
   endpoints: (builder) => ({
     getTickets: builder.query<Ticket[], { categoryId: string }>({
       query: ({ categoryId }) => `/?categoryId=${categoryId}`,
@@ -52,7 +67,13 @@ export const ticketsApi = createApi({
         method: "POST",
         body: newTicket,
       }),
-      invalidatesTags: [{ type: "Ticket", id: "TASK" }],
+      invalidatesTags: (result) =>
+        result
+          ? [
+              { type: "Ticket", id: "TASK" },
+              { type: "TicketActivity", id: result.id },
+            ]
+          : [{ type: "Ticket", id: "TASK" }],
     }),
     updateTicket: builder.mutation<
       Ticket,
@@ -69,7 +90,10 @@ export const ticketsApi = createApi({
         method: "PATCH",
         body: patch,
       }),
-      invalidatesTags: (_, __, { id }) => [{ type: "Ticket", id }],
+      invalidatesTags: (_, __, { id }) => [
+        { type: "Ticket", id },
+        { type: "TicketActivity", id },
+      ],
     }),
     deleteTicket: builder.mutation<Ticket, string>({
       query: (id) => ({
@@ -156,6 +180,12 @@ export const ticketsApi = createApi({
 
       invalidatesTags: ["Ticket"],
     }),
+    getTicketActivities: builder.query<TicketActivity[], string>({
+      query: (ticketId) => `/${ticketId}/activities`,
+      providesTags: (_, __, ticketId) => [
+        { type: "TicketActivity", id: ticketId },
+      ],
+    }),
   }),
 });
 
@@ -166,4 +196,5 @@ export const {
   useUpdateTicketMutation,
   useDeleteTicketMutation,
   useReorderTicketMutation,
+  useGetTicketActivitiesQuery,
 } = ticketsApi;
