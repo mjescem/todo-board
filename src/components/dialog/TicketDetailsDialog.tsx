@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AlignLeft, MessageSquare, ChevronDown, Tag, Plus } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { colorPickers } from "@/app/constants";
@@ -54,13 +54,28 @@ const TicketDetailsDialog = () => {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [initialDescription, setInitialDescription] = useState("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
     if (ticket) {
       setTitle(ticket.title);
-      setDescription(ticket.description ?? "");
+      const originalDescription = ticket.description ?? "";
+      setInitialDescription(originalDescription);
+
+      const savedDraft = localStorage.getItem(`draft_desc_${ticket.id}`);
+      if (savedDraft && savedDraft !== originalDescription) {
+        setDescription(savedDraft);
+        setHasUnsavedChanges(true);
+        setIsEditingDescription(false);
+      } else {
+        setDescription(originalDescription);
+        setHasUnsavedChanges(false);
+        setIsEditingDescription(false);
+        localStorage.removeItem(`draft_desc_${ticket.id}`);
+      }
     }
   }, [ticket]);
 
@@ -70,10 +85,40 @@ const TicketDetailsDialog = () => {
     }
   };
 
-  const handleDescriptionUpdate = async () => {
+  const handleDescriptionChange = (
+    e: ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    const newVal = e.target.value;
+    setDescription(newVal);
+
+    const isDifferent = newVal !== initialDescription;
+    setHasUnsavedChanges(isDifferent);
+
+    if (ticket) {
+      if (isDifferent) {
+        localStorage.setItem(`draft_desc_${ticket.id}`, newVal);
+      } else {
+        localStorage.removeItem(`draft_desc_${ticket.id}`);
+      }
+    }
+  };
+
+  const handleDescriptionSave = async () => {
     if (ticket) {
       await updateTicket({ id: ticket.id, description: description.trim() });
+      localStorage.removeItem(`draft_desc_${ticket.id}`);
+      setInitialDescription(description.trim());
+      setHasUnsavedChanges(false);
       setIsEditingDescription(false);
+    }
+  };
+
+  const handleDescriptionDiscard = () => {
+    if (ticket) {
+      setDescription(initialDescription);
+      setHasUnsavedChanges(false);
+      setIsEditingDescription(false);
+      localStorage.removeItem(`draft_desc_${ticket.id}`);
     }
   };
 
@@ -99,7 +144,7 @@ const TicketDetailsDialog = () => {
 
   const currentCategory = categories?.find((c) => c.id === ticket?.categoryId);
 
-  const getActivityLabel =(action: string, meta: Record<string, string>) =>{
+  const getActivityLabel = (action: string, meta: Record<string, string>) => {
     const renderColorText = (colorName: string | null) => {
       if (!colorName) return "no color";
       const picker = colorPickers.find(
@@ -157,7 +202,7 @@ const TicketDetailsDialog = () => {
       default:
         return action;
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={() => dispatch(closeCardDetail())}>
@@ -289,11 +334,18 @@ const TicketDetailsDialog = () => {
                   </div>
                 )}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <AlignLeft className="text-[#9fadbc]" size={24} />
-                    <h3 className="text-base font-bold text-white">
-                      Description
-                    </h3>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-4">
+                      <AlignLeft className="text-[#9fadbc]" size={24} />
+                      <h3 className="text-base font-bold text-white">
+                        Description
+                      </h3>
+                    </div>
+                    {hasUnsavedChanges && (
+                      <span className="text-[10px] font-bold text-white border border-orange-400/50 rounded-[3px] px-2 py-0.5 uppercase">
+                        Unsaved Changes
+                      </span>
+                    )}
                   </div>
                   <div className="pl-10">
                     {isEditingDescription ? (
@@ -301,23 +353,29 @@ const TicketDetailsDialog = () => {
                         <textarea
                           autoFocus
                           value={description}
-                          onChange={(e) => setDescription(e.target.value)}
+                          onChange={handleDescriptionChange}
                           className="w-full min-h-30 bg-[#22272b] p-3 text-sm rounded-lg border-2 border-transparent focus:border-primary outline-none resize-none"
                           placeholder="Add a more detailed description..."
                         />
                         <div className="flex items-center gap-2">
                           <Button
-                            onClick={handleDescriptionUpdate}
-                            className="bg-primary hover:bg-primary/90 text-white font-semibold h-9 px-3 rounded-md"
+                            onClick={handleDescriptionSave}
+                            className="bg-primary hover:bg-primary/90 text-white font-semibold h-9 rounded-md"
                           >
                             Save
                           </Button>
                           <Button
                             variant="ghost"
-                            onClick={() => setIsEditingDescription(false)}
+                            onClick={() => {
+                              if (hasUnsavedChanges) {
+                                handleDescriptionDiscard();
+                              } else {
+                                setIsEditingDescription(false);
+                              }
+                            }}
                             className="h-9 text-white font-bold hover:bg-white/5 hover:text-white/60"
                           >
-                            Cancel
+                            {hasUnsavedChanges ? "Discard changes" : "Cancel"}
                           </Button>
                         </div>
                       </div>
@@ -326,12 +384,13 @@ const TicketDetailsDialog = () => {
                         onClick={() => setIsEditingDescription(true)}
                         className={cn(
                           "p-3 rounded-md cursor-pointer min-h-12 text-sm",
-                          description
+                          initialDescription
                             ? "hover:bg-white/5"
                             : "bg-white/5 hover:bg-white/10 text-[#9fadbc]",
                         )}
                       >
-                        {description || "Add a more detailed description..."}
+                        {initialDescription ||
+                          "Add a more detailed description..."}
                       </div>
                     )}
                   </div>
