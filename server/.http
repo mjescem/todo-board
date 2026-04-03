@@ -116,6 +116,13 @@ Authorization: Bearer {{authToken}}
 
 ###
 
+# @name getTicketActivities
+GET {{baseUrl}}/tickets/{{ticketId}}/activities
+Authorization: Bearer {{authToken}}
+
+
+###
+
 # @name createTicket
 POST {{baseUrl}}/tickets
 Authorization: Bearer {{authToken}}
@@ -148,3 +155,16 @@ Content-Type: application/json
 # @name deleteTicket
 DELETE {{baseUrl}}/tickets/{{ticketId}}
 Authorization: Bearer {{authToken}}
+
+###
+
+# @name reorderTicket
+POST {{baseUrl}}/tickets/reorder
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "id": "{{ticketId}}",
+  "destinationCategoryId": "{{categoryId}}",
+  "newOrder": 1
+}

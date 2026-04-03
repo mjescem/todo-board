@@ -3,14 +3,25 @@ import { closeCardDetail } from "@/features/global/globalSlice";
 import {
   useGetTicketQuery,
   useUpdateTicketMutation,
+  useGetTicketActivitiesQuery,
+  useReorderTicketMutation,
 } from "@/features/tickets/ticketsApi";
 import { useGetCategoriesQuery } from "@/features/categories/categoriesApi";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AlignLeft, MessageSquare, ChevronDown, Tag, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { colorPickers } from "@/app/constants";
+import { formatRelativeTime } from "@/lib/utils/formatRelativeTime";
 
 const TicketDetailsDialog = () => {
   const dispatch = useAppDispatch();
@@ -34,11 +45,16 @@ const TicketDetailsDialog = () => {
   );
 
   const [updateTicket] = useUpdateTicketMutation();
+  const [reorderTicket] = useReorderTicketMutation();
+
+  const { data: activities = [], isLoading: isActivitiesLoading } =
+    useGetTicketActivitiesQuery(ticketId ?? "", {
+      skip: !ticketId,
+    });
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
@@ -70,47 +86,78 @@ const TicketDetailsDialog = () => {
   };
 
   const handleCategoryUpdate = async (categoryId: string) => {
-    if (ticket) {
-      setIsCategoryDropdownOpen(false);
+    if (ticket && categoryId !== ticket.categoryId) {
+      await reorderTicket({
+        id: ticket.id,
+        ticket: ticket,
+        sourceCategoryId: ticket.categoryId,
+        destinationCategoryId: categoryId,
+        newOrder: 0,
+      });
     }
   };
 
   const currentCategory = categories?.find((c) => c.id === ticket?.categoryId);
 
-  const mockActivities = [
-    {
-      id: "1",
-      user: "zasmine adrielle",
-      initials: "ZA",
-      action: "moved_list",
-      detail: `from Doing to ${currentCategory?.title || "Todo"}`,
-      time: "25 minutes ago",
-    },
-    {
-      id: "2",
-      user: "zasmine adrielle",
-      initials: "ZA",
-      action: "changed_title",
-      detail: "from 'Design Auth' to 'Implement Frontend UI'",
-      time: "2 hours ago",
-    },
-    {
-      id: "3",
-      user: "zasmine adrielle",
-      initials: "ZA",
-      action: "applied_color",
-      detail: "blue",
-      time: "4 hours ago",
-    },
-    {
-      id: "4",
-      user: "zasmine adrielle",
-      initials: "ZA",
-      action: "added_card",
-      detail: "Doing",
-      time: "11 hours ago",
-    },
-  ];
+  const getActivityLabel =(action: string, meta: Record<string, string>) =>{
+    const renderColorText = (colorName: string | null) => {
+      if (!colorName) return "no color";
+      const picker = colorPickers.find(
+        (c) => c.name.toLowerCase() === colorName.toLowerCase(),
+      );
+      if (!picker) return colorName;
+
+      const textColorClass = picker.color.replace("bg-", "text-");
+      return (
+        <span className={cn("font-bold lowercase", textColorClass)}>
+          {colorName}
+        </span>
+      );
+    };
+
+    switch (action) {
+      case "created":
+        return `added this card to ${meta.categoryName ?? "a list"}`;
+      case "title_changed":
+        return (
+          <span>
+            changed the title from{" "}
+            <span className="font-bold italic">"{meta.from}"</span> to{" "}
+            <span className="font-bold italic">"{meta.to}"</span>
+          </span>
+        );
+      case "description_changed":
+        return "updated the description";
+      case "color_changed":
+        if (!meta.from && meta.to) {
+          return <span>applied the {renderColorText(meta.to)} label</span>;
+        }
+        if (meta.from && !meta.to) {
+          return <span>removed the {renderColorText(meta.from)} label</span>;
+        }
+        return (
+          <span>
+            changed the label from {renderColorText(meta.from)} to{" "}
+            {renderColorText(meta.to)}
+          </span>
+        );
+      case "category_moved":
+        return (
+          <span>
+            moved this card from <span className="font-bold">{meta.from}</span>{" "}
+            to <span className="font-bold">{meta.to}</span>
+          </span>
+        );
+      case "status_changed":
+        return (
+          <span>
+            marked this card as <span className="font-bold">{meta.to}</span>
+          </span>
+        );
+      default:
+        return action;
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={() => dispatch(closeCardDetail())}>
@@ -127,39 +174,33 @@ const TicketDetailsDialog = () => {
           <div className="flex flex-col h-full max-h-[90vh]">
             <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-[#1d2125]">
               <div className="flex items-center gap-2 relative">
-                <div
-                  onClick={() =>
-                    setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
-                  }
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded-md cursor-pointer text-sm font-bold text-white"
-                >
-                  <span>{currentCategory?.title || "List"}</span>
-                  <ChevronDown size={14} />
-                </div>
-
-                {isCategoryDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-[#22272b] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                    <div className="p-2 space-y-1">
-                      <p className="text-[10px] font-bold text-gray-500 px-2 py-1">
-                        Move card
-                      </p>
-                      {categories?.map((cat) => (
-                        <button
-                          key={cat.id}
-                          onClick={() => handleCategoryUpdate(cat.id)}
-                          className={cn(
-                            "w-full text-left px-2 py-1.5 rounded-md text-sm hover:bg-white/5",
-                            cat.id === ticket.categoryId
-                              ? "text-[#579dff] font-bold"
-                              : "text-[#b6c2cf]",
-                          )}
-                        >
-                          {cat.title}
-                        </button>
-                      ))}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded-md cursor-pointer text-sm font-bold text-white outline-none">
+                      <span>{currentCategory?.title || "List"}</span>
+                      <ChevronDown size={14} />
                     </div>
-                  </div>
-                )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48 bg-[#22272b] border-white/10 text-[#b6c2cf]">
+                    <DropdownMenuLabel className="text-[10px] font-bold text-gray-500 px-2 py-1">
+                      Move card
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-white/5" />
+                    {categories?.map((cat) => (
+                      <DropdownMenuItem
+                        key={cat.id}
+                        onClick={() => handleCategoryUpdate(cat.id)}
+                        className={cn(
+                          "cursor-pointer focus:bg-white/5 focus:text-white",
+                          cat.id === ticket.categoryId &&
+                            "text-[#579dff] font-bold",
+                        )}
+                      >
+                        {cat.title}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
@@ -179,7 +220,7 @@ const TicketDetailsDialog = () => {
                         }
                       }}
                       rows={1}
-                      className="w-full text-3xl font-extrabold border-2 focus:border-primary focus:outline-none focus:ring-0 p-1 text-white placeholder:text-gray-600 resize-none overflow-hidden min-h-10 rounded-md"
+                      className="w-full text-3xl font-extrabold border-0 focus:border-2 focus:border-primary focus:outline-none focus:ring-0 p-1 text-white placeholder:text-gray-600 resize-none overflow-hidden min-h-10 rounded-md"
                       placeholder="Card title..."
                     />
                   </div>
@@ -303,47 +344,56 @@ const TicketDetailsDialog = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
-                  <div className="space-y-4">
-                    {mockActivities.map((activity, index) => (
-                      <div
-                        key={activity.id}
-                        className="flex gap-3 animate-in fade-in slide-in-from-right-2"
-                        style={{ animationDuration: `${300 + index * 100}ms` }}
-                      >
-                        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-black text-primary shrink-0">
-                          {activity.initials}
+                  {isActivitiesLoading ? (
+                    <div className="space-y-4">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="flex gap-3 animate-pulse">
+                          <div className="h-8 w-8 rounded-full bg-white/10 shrink-0" />
+                          <div className="flex-1 space-y-2 pt-1">
+                            <div className="h-3 bg-white/10 rounded w-3/4" />
+                            <div className="h-3 bg-white/10 rounded w-1/2" />
+                          </div>
                         </div>
-                        <div className="text-xs space-y-1">
-                          <p>
-                            <span className="font-bold text-[#b6c2cf] mr-1">
-                              {activity.user}
-                            </span>
-                            {activity.action === "applied_color" ? (
-                              <span>
-                                applied the{" "}
-                                <span
-                                  className="font-bold lowercase"
-                                  style={{ color: "var(--primary)" }}
-                                >
-                                  {activity.detail}
-                                </span>{" "}
-                                label
+                      ))}
+                    </div>
+                  ) : activities.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-2 text-center py-8">
+                      <MessageSquare size={28} className="text-white/20" />
+                      <p className="text-xs text-white/30">No activity yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {activities.map((activity, index) => (
+                        <div
+                          key={activity.id}
+                          className="flex gap-3 animate-in fade-in slide-in-from-right-2"
+                          style={{
+                            animationDuration: `${300 + index * 100}ms`,
+                          }}
+                        >
+                          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-black text-primary shrink-0">
+                            {activity.user.initials}
+                          </div>
+                          <div className="text-xs space-y-1">
+                            <p>
+                              <span className="font-bold text-[#b6c2cf] mr-1">
+                                {activity.user.name}
                               </span>
-                            ) : activity.action === "moved_list" ? (
-                              <span>moved this card {activity.detail}</span>
-                            ) : activity.action === "changed_title" ? (
-                              <span>changed the title {activity.detail}</span>
-                            ) : activity.action === "added_card" ? (
-                              <span>added this card to {activity.detail}</span>
-                            ) : (
-                              <span>{activity.detail}</span>
-                            )}
-                          </p>
-                          <p className="text-[#9fadbc]">{activity.time}</p>
+                              <span>
+                                {getActivityLabel(
+                                  activity.action,
+                                  activity.meta,
+                                )}
+                              </span>
+                            </p>
+                            <p className="text-[#9fadbc]">
+                              {formatRelativeTime(activity.createdAt)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
