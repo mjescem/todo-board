@@ -6,8 +6,9 @@ export interface Ticket {
   categoryId: string;
   title: string;
   description?: string;
-  isDone: boolean;
+  isDraft: boolean;
   color?: string | null;
+  expiryDate?: string | null;
   order: number;
 }
 
@@ -16,6 +17,7 @@ export interface CreateTicketRequest {
   title: string;
   description?: string;
   color?: string | null;
+  expiryDate?: string | null;
 }
 
 export interface TicketActivity {
@@ -27,7 +29,8 @@ export interface TicketActivity {
     | "description_changed"
     | "color_changed"
     | "category_moved"
-    | "status_changed";
+    | "status_changed"
+    | "expiry_date_changed";
   meta: Record<string, string>;
   createdAt: string;
   user: { name: string; initials: string };
@@ -81,8 +84,9 @@ export const ticketsApi = createApi({
         id: string;
         title?: string;
         description?: string;
-        isDone?: boolean;
+        isDraft?: boolean;
         color?: string | null;
+        expiryDate?: string | null;
       }
     >({
       query: ({ id, ...patch }) => ({

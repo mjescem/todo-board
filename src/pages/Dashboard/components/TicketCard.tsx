@@ -3,7 +3,8 @@ import { useAppDispatch } from "@/app/hooks";
 import { openCardDetail } from "@/features/global/globalSlice";
 import type { Ticket } from "@/features/tickets/ticketsApi";
 import { useReorderTicketMutation } from "@/features/tickets/ticketsApi";
-import { AlignLeft } from "lucide-react";
+import { AlignLeft, Clock } from "lucide-react";
+import { format, isPast, differenceInHours } from "date-fns";
 import { cn } from "@/lib/utils";
 import { colorPickers } from "@/app/constants";
 
@@ -140,9 +141,36 @@ const TicketCard: React.FC<Props> = ({ ticket }) => {
         <div className="flex items-start gap-2">
           <h4 className="text-sm font-medium text-white">{ticket.title}</h4>
         </div>
-        {!!ticket.description && (
-          <div className="flex items-center gap-2 mt-3 text-white/70">
-            <AlignLeft size={16} strokeWidth={2.5} />
+        {(!!ticket.description || ticket.expiryDate) && (
+          <div className="flex flex-wrap items-center gap-2 mt-3 text-white/70">
+            {ticket.expiryDate && (
+              <div
+                className={cn(
+                  "flex items-center gap-1.5 px-1.5 py-0.5 rounded shrink-0",
+                  isPast(new Date(ticket.expiryDate))
+                    ? "bg-red-500 text-white"
+                    : differenceInHours(
+                          new Date(ticket.expiryDate),
+                          new Date(),
+                        ) < 24
+                      ? "bg-yellow-500 text-white"
+                      : "bg-white/10 text-[#b6c2cf] hover:bg-white/20 transition-colors",
+                )}
+              >
+                <Clock size={12} />
+                <span className="text-[10px] font-bold">
+                  {format(new Date(ticket.expiryDate), "MMM d")}
+                </span>
+              </div>
+            )}
+            {!!ticket.description && (
+              <div
+                className="flex items-center text-[#9fadbc]"
+                title="This card has a description."
+              >
+                <AlignLeft size={14} strokeWidth={2} />
+              </div>
+            )}
           </div>
         )}
       </div>

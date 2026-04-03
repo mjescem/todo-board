@@ -15,6 +15,7 @@ export const recordActivitySchema = z.object({
     "color_changed",
     "category_moved",
     "status_changed",
+    "expiry_date_changed",
   ]),
   meta: z.record(z.string(), z.unknown()).default({}),
 });
