@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { api } from "@/app/api";
 import type { User } from "./authSlice";
 
 export interface AuthResponse {
@@ -12,14 +12,12 @@ export interface RegisterRequest {
   password: string;
 }
 
-export interface LoginRequest{
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-export const authApi = createApi({
-  reducerPath: "authApi",
-  baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
+export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     signUp: builder.mutation<AuthResponse, RegisterRequest>({
       query: (credentials) => ({
@@ -32,9 +30,9 @@ export const authApi = createApi({
       query: (credentials) => ({
         url: "/auth/login",
         method: "POST",
-        body: credentials
-      })
-    })
+        body: credentials,
+      }),
+    }),
   }),
 });
 

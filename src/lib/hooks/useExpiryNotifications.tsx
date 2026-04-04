@@ -10,7 +10,7 @@ export function useExpiryNotifications() {
     pollingInterval: 5 * 60 * 1000, // refresh every 5 minutes
   });
   const hasNotified = useRef(false);
-console.log(upcomingTickets, "YOWWW????")
+  
   useEffect(() => {
     if (!upcomingTickets || upcomingTickets.length === 0) return;
     if (hasNotified.current) return;

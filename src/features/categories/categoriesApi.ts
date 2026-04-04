@@ -1,5 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { RootState } from "@/app/store";
+import { api } from "@/app/api";
 
 export interface Category {
   id: string;
@@ -13,22 +12,10 @@ export interface CreateCategoryRequest {
   title: string;
 }
 
-export const categoriesApi = createApi({
-  reducerPath: "categoriesApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "/api/categories",
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ["Category"],
+export const categoriesApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getCategories: builder.query<Category[], { boardId: string }>({
-      query: ({ boardId }) => `/?boardId=${boardId}`,
+      query: ({ boardId }) => `/categories?boardId=${boardId}`,
       providesTags: (result) =>
         result
           ? [
@@ -39,7 +26,7 @@ export const categoriesApi = createApi({
     }),
     createCategory: builder.mutation<Category, CreateCategoryRequest>({
       query: (newCategory) => ({
-        url: "/",
+        url: "/categories",
         method: "POST",
         body: newCategory,
       }),
@@ -47,7 +34,7 @@ export const categoriesApi = createApi({
     }),
     updateCategory: builder.mutation<Category, { id: string; title?: string }>({
       query: ({ id, ...patch }) => ({
-        url: `/${id}`,
+        url: `/categories/${id}`,
         method: "PATCH",
         body: patch,
       }),
@@ -55,7 +42,7 @@ export const categoriesApi = createApi({
     }),
     deleteCategory: builder.mutation<Category, string>({
       query: (id) => ({
-        url: `/${id}`,
+        url: `/categories/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: [{ type: "Category", id: "LIST" }],
@@ -65,7 +52,7 @@ export const categoriesApi = createApi({
       { id: string; boardId: string; newOrder: number }
     >({
       query: (data) => ({
-        url: "/reorder",
+        url: "/categories/reorder",
         method: "POST",
         body: {
           id: data.id,
@@ -102,7 +89,7 @@ export const categoriesApi = createApi({
         }
       },
 
-      invalidatesTags: ["Category"],
+      invalidatesTags: [{ type: "Category", id: "LIST" }],
     }),
   }),
 });
@@ -112,5 +99,5 @@ export const {
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,
-  useReorderCategoryMutation
+  useReorderCategoryMutation,
 } = categoriesApi;

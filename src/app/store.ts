@@ -1,8 +1,5 @@
-import { authApi } from "@/features/auth/authApi";
+import { api } from "./api";
 import authReducer from "@/features/auth/authSlice";
-import { boardsApi } from "@/features/boards/boardsApi";
-import { categoriesApi } from "@/features/categories/categoriesApi";
-import { ticketsApi } from "@/features/tickets/ticketsApi";
 import globalReducer from "@/features/global/globalSlice";
 import { configureStore } from "@reduxjs/toolkit";
 import {
@@ -36,10 +33,7 @@ const persistedGlobalReducer = persistReducer(
 
 export const store = configureStore({
   reducer: {
-    [authApi.reducerPath]: authApi.reducer,
-    [boardsApi.reducerPath]: boardsApi.reducer,
-    [categoriesApi.reducerPath]: categoriesApi.reducer,
-    [ticketsApi.reducerPath]: ticketsApi.reducer,
+    [api.reducerPath]: api.reducer,
     auth: persistedAuthReducer,
     global: persistedGlobalReducer,
   },
@@ -48,7 +42,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(authApi.middleware, boardsApi.middleware, categoriesApi.middleware, ticketsApi.middleware);
+    }).concat(api.middleware);
   },
 });
 
