@@ -1,19 +1,22 @@
 import { logout, type User } from "@/features/auth/authSlice";
 import { useAppDispatch } from "@/app/hooks";
-import { Bell, LayoutDashboard, LogOut } from "lucide-react";
-import { openBoardSelectorDialog } from "@/features/global/globalSlice";
+import { LayoutDashboard, LogOut } from "lucide-react";
+import {
+  openBoardSelectorDialog,
+} from "@/features/global/globalSlice";
+import Notifications from "./Notifications";
 
 type Props = { user: User | null };
 
 const Header: React.FC<Props> = ({ user }) => {
-    const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
   return (
     <header className="flex h-14 justify-between border-b bg-white px-6">
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3">
           <div
-            className="rounded-sm bg-primary p-1 text-white"
+            className="rounded-sm bg-primary p-1 text-white cursor-pointer"
             onClick={() => dispatch(openBoardSelectorDialog())}
           >
             <LayoutDashboard size={18} />
@@ -23,9 +26,7 @@ const Header: React.FC<Props> = ({ user }) => {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="text-gray-400 hover:text-primary transition-colors cursor-pointer">
-          <Bell size={20} />
-        </button>
+        <Notifications />
         <div className="flex items-center gap-2 px-2 py-1 rounded-full">
           <div className="flex size-8 items-center justify-center rounded-full bg-primary font-bold text-white shadow-sm text-xs">
             {user?.name?.charAt(0).toUpperCase()}

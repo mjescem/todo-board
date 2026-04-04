@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, isNotNull, lte } from "drizzle-orm";
 import { db } from "../../database/index.js";
 import { tickets } from "../../database/schema/ticket.js";
 import { categories } from "../../database/schema/category.js";
@@ -292,4 +292,29 @@ export async function reorderTicket(params: ReorderTicketParams) {
 
     return updated;
   });
+}
+
+export async function getUpcomingTickets({ ownerId }: { ownerId: string }) {
+  const fortyEightHoursFromNow = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+  const rows = await db
+    .select({
+      id: tickets.id,
+      title: tickets.title,
+      expiryDate: tickets.expiryDate,
+      categoryId: tickets.categoryId,
+    })
+    .from(tickets)
+    .innerJoin(categories, eq(tickets.categoryId, categories.id))
+    .innerJoin(boards, eq(categories.boardId, boards.id))
+    .where(
+      and(
+        eq(boards.ownerId, ownerId),
+        isNotNull(tickets.expiryDate),
+        lte(tickets.expiryDate, fortyEightHoursFromNow),
+      ),
+    )
+    .orderBy(tickets.expiryDate);
+
+  return rows;
 }

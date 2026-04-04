@@ -168,3 +168,9 @@ Content-Type: application/json
   "destinationCategoryId": "{{categoryId}}",
   "newOrder": 1
 }
+
+###
+
+# @name getUpcomingTickets
+GET {{baseUrl}}/tickets/upcoming
+Authorization: Bearer {{authToken}}
