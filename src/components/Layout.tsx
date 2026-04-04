@@ -1,11 +1,14 @@
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import Header from "./Header";
 import { Outlet } from "react-router-dom";
-import CreateBoardDialog, { type BoardForm } from "./dialog/CreateBoardDialog";
+import { type BoardForm } from "./dialog/CreateBoardDialog";
 import { closeCreateBoardDialog, setActiveBoard } from "@/features/global/globalSlice";
 import { useCreateBoardMutation } from "@/features/boards/boardsApi";
-import BoardSelectorDialog from "./dialog/BoardSelectorDialog";
-import TicketDetailsDialog from "./dialog/TicketDetailsDialog";
+import { lazy } from "react";
+
+const CreateBoardDialog = lazy(() => import("./dialog/CreateBoardDialog"));
+const BoardSelectorDialog = lazy(() => import("./dialog/BoardSelectorDialog"));
+const TicketDetailsDialog = lazy(() => import("./dialog/TicketDetailsDialog"));
 
 function Layout(){
   const dispatch = useAppDispatch();

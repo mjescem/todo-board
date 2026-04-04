@@ -36,6 +36,13 @@ export interface TicketActivity {
   user: { name: string; initials: string };
 }
 
+export interface UpcomingTicket {
+  id: string;
+  title: string;
+  expiryDate: string;
+  categoryId: string;
+}
+
 export const ticketsApi = createApi({
   reducerPath: "ticketsApi",
   baseQuery: fetchBaseQuery({
@@ -48,7 +55,7 @@ export const ticketsApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Ticket", "TicketActivity"],
+  tagTypes: ["Ticket", "TicketActivity", "UpcomingTicket"],
   endpoints: (builder) => ({
     getTickets: builder.query<Ticket[], { categoryId: string }>({
       query: ({ categoryId }) => `/?categoryId=${categoryId}`,
@@ -75,8 +82,12 @@ export const ticketsApi = createApi({
           ? [
               { type: "Ticket", id: "TASK" },
               { type: "TicketActivity", id: result.id },
+              { type: "UpcomingTicket", id: "LIST" },
             ]
-          : [{ type: "Ticket", id: "TASK" }],
+          : [
+              { type: "Ticket", id: "TASK" },
+              { type: "UpcomingTicket", id: "LIST" },
+            ],
     }),
     updateTicket: builder.mutation<
       Ticket,
@@ -97,6 +108,7 @@ export const ticketsApi = createApi({
       invalidatesTags: (_, __, { id }) => [
         { type: "Ticket", id },
         { type: "TicketActivity", id },
+        { type: "UpcomingTicket", id: "LIST" },
       ],
     }),
     deleteTicket: builder.mutation<Ticket, string>({
@@ -182,13 +194,21 @@ export const ticketsApi = createApi({
         }
       },
 
-      invalidatesTags: ["Ticket"],
+      invalidatesTags: (_, __, { id }) => [
+        { type: "Ticket", id },
+        { type: "TicketActivity", id },
+      ],
     }),
     getTicketActivities: builder.query<TicketActivity[], string>({
       query: (ticketId) => `/${ticketId}/activities`,
       providesTags: (_, __, ticketId) => [
         { type: "TicketActivity", id: ticketId },
       ],
+    }),
+    getUpcomingTickets: builder.query<UpcomingTicket[], void>({
+      query: () => "/upcoming",
+      providesTags: [{ type: "UpcomingTicket", id: "LIST" }],
+      keepUnusedDataFor: 300,
     }),
   }),
 });
@@ -201,4 +221,5 @@ export const {
   useDeleteTicketMutation,
   useReorderTicketMutation,
   useGetTicketActivitiesQuery,
+  useGetUpcomingTicketsQuery,
 } = ticketsApi;

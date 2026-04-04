@@ -6,6 +6,7 @@ import { lazy, Suspense } from "react";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Layout from "./components/Layout";
+import { Toaster } from "sonner";
 
 const Register = lazy(() => import("./pages/Register"));
 const Login = lazy(() => import("./pages/Login"));
@@ -37,6 +38,7 @@ function App() {
           </Suspense>
         </Router>
       </PersistGate>
+      <Toaster theme="dark" position="bottom-right" richColors closeButton />
     </Provider>
   );
 }
