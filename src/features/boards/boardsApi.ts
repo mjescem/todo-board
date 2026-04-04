@@ -1,5 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { RootState } from "@/app/store";
+import { api } from "@/app/api";
 
 export interface Board {
   id: string;
@@ -12,27 +11,15 @@ export interface CreateBoardRequest {
   title: string;
 }
 
-export const boardsApi = createApi({
-  reducerPath: "boardsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "/api/boards",
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ["Board"],
+export const boardsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getBoards: builder.query<Board[], void>({
-      query: () => "/",
+      query: () => "/boards",
       providesTags: ["Board"],
     }),
     createBoard: builder.mutation<Board, CreateBoardRequest>({
       query: (newBoard) => ({
-        url: "/",
+        url: "/boards",
         method: "POST",
         body: newBoard,
       }),
@@ -40,7 +27,7 @@ export const boardsApi = createApi({
     }),
     updateBoard: builder.mutation<Board, { id: string; title: string }>({
       query: ({ id, title }) => ({
-        url: `/${id}`,
+        url: `/boards/${id}`,
         method: "PATCH",
         body: { title },
       }),
@@ -48,7 +35,7 @@ export const boardsApi = createApi({
     }),
     deleteBoard: builder.mutation<Board, string>({
       query: (id) => ({
-        url: `/${id}`,
+        url: `/boards/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Board"],
