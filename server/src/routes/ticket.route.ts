@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createTicketHandler, deleteTicketHandler, getTicketHandler, getTicketsHandler, reorderTicketHandler, updateTicketHandler } from "../controllers/ticket.controller.js";
+import { createTicketHandler, deleteTicketHandler, getTicketHandler, getTicketsHandler, getUpcomingTicketsHandler, reorderTicketHandler, updateTicketHandler } from "../controllers/ticket.controller.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { getTicketActivitiesHandler } from "../controllers/ticketActivity.controller.js";
 
@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/", getTicketsHandler);
+router.get("/upcoming", getUpcomingTicketsHandler);
 router.get("/:id", getTicketHandler);
 router.post("/", createTicketHandler);
 router.patch("/:id", updateTicketHandler);
