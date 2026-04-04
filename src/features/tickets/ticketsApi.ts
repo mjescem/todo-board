@@ -1,5 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { RootState } from "@/app/store";
+import { api } from "@/app/api";
 
 export interface Ticket {
   id: string;
@@ -43,22 +42,10 @@ export interface UpcomingTicket {
   categoryId: string;
 }
 
-export const ticketsApi = createApi({
-  reducerPath: "ticketsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "/api/tickets",
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ["Ticket", "TicketActivity", "UpcomingTicket"],
+export const ticketsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getTickets: builder.query<Ticket[], { categoryId: string }>({
-      query: ({ categoryId }) => `/?categoryId=${categoryId}`,
+      query: ({ categoryId }) => `/tickets?categoryId=${categoryId}`,
       providesTags: (result) =>
         result
           ? [
@@ -73,7 +60,7 @@ export const ticketsApi = createApi({
     }),
     createTicket: builder.mutation<Ticket, CreateTicketRequest>({
       query: (newTicket) => ({
-        url: "/",
+        url: "/tickets",
         method: "POST",
         body: newTicket,
       }),
@@ -101,7 +88,7 @@ export const ticketsApi = createApi({
       }
     >({
       query: ({ id, ...patch }) => ({
-        url: `/${id}`,
+        url: `/tickets/${id}`,
         method: "PATCH",
         body: patch,
       }),
@@ -113,7 +100,7 @@ export const ticketsApi = createApi({
     }),
     deleteTicket: builder.mutation<Ticket, string>({
       query: (id) => ({
-        url: `/${id}`,
+        url: `/tickets/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: [{ type: "Ticket", id: "TASK" }],
@@ -129,7 +116,7 @@ export const ticketsApi = createApi({
       }
     >({
       query: (body) => ({
-        url: "/reorder",
+        url: "/tickets/reorder",
         method: "POST",
         body: {
           id: body.id,
@@ -200,13 +187,13 @@ export const ticketsApi = createApi({
       ],
     }),
     getTicketActivities: builder.query<TicketActivity[], string>({
-      query: (ticketId) => `/${ticketId}/activities`,
+      query: (ticketId) => `/tickets/${ticketId}/activities`,
       providesTags: (_, __, ticketId) => [
         { type: "TicketActivity", id: ticketId },
       ],
     }),
     getUpcomingTickets: builder.query<UpcomingTicket[], void>({
-      query: () => "/upcoming",
+      query: () => "/tickets/upcoming",
       providesTags: [{ type: "UpcomingTicket", id: "LIST" }],
       keepUnusedDataFor: 300,
     }),
