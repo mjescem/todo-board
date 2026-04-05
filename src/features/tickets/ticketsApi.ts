@@ -55,7 +55,7 @@ export const ticketsApi = api.injectEndpoints({
           : [{ type: "Ticket", id: "TASK" }],
     }),
     getTicket: builder.query<Ticket, string>({
-      query: (id) => `/${id}`,
+      query: (id) => `/tickets/${id}`,
       providesTags: (_, __, id) => [{ type: "Ticket", id }],
     }),
     createTicket: builder.mutation<Ticket, CreateTicketRequest>({
