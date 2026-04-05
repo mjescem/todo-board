@@ -1,8 +1,13 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { db, pool } from "./index.js";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const main = () => {
-  migrate(db, { migrationsFolder: "./src/database/drizzle" })
+  migrate(db, { migrationsFolder: path.join(__dirname, "drizzle") })
     .then(() => {
       console.info("Migrations complete!");
       process.exit(0);

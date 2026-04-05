@@ -25,3 +25,5 @@ dist-ssr
 
 # asdf version manager
 .tool-versions
+
+.env
