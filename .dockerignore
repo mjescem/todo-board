@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.env
+.github
+server/node_modules
+server/dist
+docker-compose.yml
+readme.md
