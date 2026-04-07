@@ -22,7 +22,7 @@ const authPersistConfig = {
 const globalPersistConfig = {
   key: "global",
   storage,
-  whitelist: ["activeBoardId", "boardSelectorDialog"],
+  whitelist: ["boardSelectorDialog"],
 };
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);

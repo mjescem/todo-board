@@ -1,5 +1,4 @@
-import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { closeCardDetail } from "@/features/global/globalSlice";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useGetTicketQuery,
   useUpdateTicketMutation,
@@ -39,11 +38,12 @@ import { format } from "date-fns";
 import DueDatePicker from "../DueDatePicker";
 
 const TicketDetailsDialog = () => {
-  const dispatch = useAppDispatch();
-  const { isOpen, ticketId } = useAppSelector(
-    (state) => state.global.cardDetailDialog,
-  );
-  const activeBoardId = useAppSelector((state) => state.global.activeBoardId);
+  const navigate = useNavigate();
+  const { boardId, ticketId } = useParams<{
+    boardId: string;
+    ticketId: string;
+  }>();
+  const isOpen = !!ticketId;
 
   const { data: ticket, isLoading: isTicketLoading } = useGetTicketQuery(
     ticketId ?? "",
@@ -53,9 +53,9 @@ const TicketDetailsDialog = () => {
   );
 
   const { data: categories } = useGetCategoriesQuery(
-    { boardId: activeBoardId ?? "" },
+    { boardId: boardId ?? "" },
     {
-      skip: !activeBoardId,
+      skip: !boardId,
     },
   );
 
@@ -240,8 +240,12 @@ const TicketDetailsDialog = () => {
     }
   };
 
+  const handleClose = () => {
+      navigate(`/boards/${boardId}`);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={() => dispatch(closeCardDetail())}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-4xl bg-[#1d2125] border-white/10 text-[#b6c2cf] p-0 rounded-xl shadow-2xl">
         {isTicketLoading ? (
           <div className="h-96 flex items-center justify-center">

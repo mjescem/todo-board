@@ -2,9 +2,9 @@ import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import {
   closeBoardSelectorDialog,
   openCreateBoardDialog,
-  setActiveBoard,
 } from "@/features/global/globalSlice";
 import { useGetBoardsQuery } from "@/features/boards/boardsApi";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -16,10 +16,11 @@ import { Button } from "@/components/ui/button";
 
 const BoardSelectorModal = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { boardId: activeBoardId } = useParams<{ boardId: string }>();
   const { isOpen } = useAppSelector(
     (state) => state.global.boardSelectorDialog,
   );
-  const { activeBoardId } = useAppSelector((state) => state.global);
   const { data: boards, isLoading } = useGetBoardsQuery();
 
   const handleClose = () => {
@@ -27,7 +28,7 @@ const BoardSelectorModal = () => {
   };
 
   const handleSelectBoard = (id: string) => {
-    dispatch(setActiveBoard(id));
+    navigate(`/boards/${id}`);
     handleClose();
   };
 
