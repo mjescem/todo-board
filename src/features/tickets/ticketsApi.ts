@@ -40,6 +40,8 @@ export interface UpcomingTicket {
   title: string;
   expiryDate: string;
   categoryId: string;
+  boardId: string;
+  boardTitle: string;
 }
 
 export const ticketsApi = api.injectEndpoints({
