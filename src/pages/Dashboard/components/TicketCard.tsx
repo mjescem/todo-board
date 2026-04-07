@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useAppDispatch } from "@/app/hooks";
-import { openCardDetail } from "@/features/global/globalSlice";
+import { useNavigate, useParams } from "react-router-dom";
 import type { Ticket } from "@/features/tickets/ticketsApi";
 import { useReorderTicketMutation } from "@/features/tickets/ticketsApi";
 import { AlignLeft, Clock } from "lucide-react";
@@ -15,7 +14,8 @@ type Props = {
 let globalDraggedHeight = 60;
 
 const TicketCard: React.FC<Props> = ({ ticket }) => {
-  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { boardId } = useParams<{ boardId: string }>();
   const [reorderTicket] = useReorderTicketMutation();
 
   const [dropIndicator, setDropIndicator] = useState<"top" | "bottom" | null>(
@@ -124,7 +124,7 @@ const TicketCard: React.FC<Props> = ({ ticket }) => {
         draggable
         onDragStart={(e) => handleDragStart(e, ticket)}
         onDragEnd={handleDragEnd}
-        onClick={() => dispatch(openCardDetail(ticket.id))}
+        onClick={() => navigate(`/boards/${boardId}/tickets/${ticket.id}`)}
         className={`cursor-pointer rounded-lg bg-[#2b2c36]/80 p-3 shadow-sm transition-all duration-200 group ${
           dropIndicator ? "opacity-80" : "hover:ring-2 hover:ring-blue-500"
         }`}

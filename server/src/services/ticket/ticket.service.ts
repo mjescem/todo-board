@@ -303,6 +303,8 @@ export async function getUpcomingTickets({ ownerId }: { ownerId: string }) {
       title: tickets.title,
       expiryDate: tickets.expiryDate,
       categoryId: tickets.categoryId,
+      boardId: categories.boardId,
+      boardTitle: boards.title,
     })
     .from(tickets)
     .innerJoin(categories, eq(tickets.categoryId, categories.id))

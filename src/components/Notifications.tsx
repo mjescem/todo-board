@@ -4,14 +4,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useAppDispatch } from "@/app/hooks";
-import { openCardDetail } from "@/features/global/globalSlice";
 import { useExpiryNotifications } from "@/lib/hooks/useExpiryNotifications";
 import { isPast, differenceInHours, format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const Notifications: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const upcomingTickets = useExpiryNotifications();
 
   const overdueCount = upcomingTickets.filter((t) =>
@@ -70,7 +69,11 @@ const Notifications: React.FC = () => {
                 return (
                   <li key={ticket.id}>
                     <button
-                      onClick={() => dispatch(openCardDetail(ticket.id))}
+                      onClick={() =>
+                        navigate(
+                          `/boards/${ticket.boardId}/tickets/${ticket.id}`,
+                        )
+                      }
                       className="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
                     >
                       <div className="mt-0.5 shrink-0">
@@ -85,13 +88,16 @@ const Notifications: React.FC = () => {
                         <p className="text-sm font-semibold text-gray-800 truncate">
                           {ticket.title}
                         </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-[10px] font-bold text-gray-400 mt-1 mb-0.5 truncate">
+                          {ticket.boardTitle}
+                        </p>
+                        <p className="text-xs text-gray-500">
                           {format(date, "MMM d 'at' h:mm a")}
                         </p>
                       </div>
                       <span
                         className={cn(
-                          "shrink-0 self-center text-[10px] font-black uppercase px-1.5 py-0.5 rounded",
+                          "shrink-0 self-center text-[10px] font-black px-1.5 py-0.5 rounded",
                           isOverdue
                             ? "bg-red-100 text-red-600"
                             : hoursLeft < 6
@@ -117,4 +123,4 @@ const Notifications: React.FC = () => {
   );
 };
 
-export default Notifications
+export default Notifications;

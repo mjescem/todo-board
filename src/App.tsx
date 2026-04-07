@@ -1,4 +1,4 @@
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { persistor, store } from "./app/store";
 import { PersistGate } from "redux-persist/integration/react";
@@ -28,6 +28,14 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<Layout />}>
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="boards">
+                    <Route index element={<Navigate to="/" replace />} />
+                    <Route path=":boardId" element={<Dashboard />} />
+                    <Route
+                      path=":boardId/tickets/:ticketId"
+                      element={<Dashboard />}
+                    />
+                  </Route>
                 </Route>
               </Route>
               <Route element={<PublicRoute />}>

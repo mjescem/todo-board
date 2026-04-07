@@ -1,15 +1,15 @@
 import { ChevronDown, Plus, X } from "lucide-react";
 import CategoryCard from "./components/CategoryCard";
 import {
-  useGetBoardsQuery,
   useUpdateBoardMutation,
+  useGetBoardsQuery,
 } from "@/features/boards/boardsApi";
+import { useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { useAppDispatch } from "@/app/hooks";
 import {
   openBoardSelectorDialog,
   openCreateBoardDialog,
-  setActiveBoard,
 } from "@/features/global/globalSlice";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,13 +20,14 @@ import {
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
+  const { boardId } = useParams<{ boardId: string }>();
   const { data: boards = [], isLoading: isBoardsLoading } = useGetBoardsQuery();
-  const { activeBoardId } = useAppSelector((state) => state.global);
   const [updateBoard] = useUpdateBoardMutation();
 
   const { data: categories = [], isLoading: isCategoriesLoading } =
     useGetCategoriesQuery(
-      { boardId: activeBoardId! }
+      { boardId: boardId ?? "" },
+      { skip: !boardId },
     );
 
   const [createCategory, { isLoading: isCreatingCategory }] =
@@ -37,10 +38,10 @@ export default function Dashboard() {
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState("");
 
-  const isLoading = isBoardsLoading || (activeBoardId && isCategoriesLoading);
+  const isLoading = isBoardsLoading || (boardId && isCategoriesLoading);
   const addListRef = useRef<HTMLDivElement>(null);
 
-  const activeBoard = boards.find((b) => b.id === activeBoardId)
+  const activeBoard = boards.find((b) => b.id === boardId);
 
   const handleUpdateTitle = async () => {
     if (
@@ -66,11 +67,11 @@ export default function Dashboard() {
   };
 
   const handleAddList = async () => {
-    if (!activeBoardId || !newListTitle.trim()) return;
+    if (!boardId || !newListTitle.trim()) return;
 
     try {
       await createCategory({
-        boardId: activeBoardId,
+        boardId: boardId,
         title: newListTitle.trim(),
       }).unwrap();
       setNewListTitle("");
@@ -99,14 +100,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (!isBoardsLoading && !activeBoardId) {
-      if (boards.length > 0) {
-        dispatch(setActiveBoard(boards[0].id));
-      } else {
-        dispatch(openBoardSelectorDialog());
-      }
+    if (!isBoardsLoading && !boardId) {
+      dispatch(openBoardSelectorDialog());
     }
-  }, [activeBoardId, boards, isBoardsLoading, dispatch]);
+  }, [boardId, isBoardsLoading, dispatch]);
 
   useEffect(() => {
     if (activeBoard) {
@@ -114,26 +111,26 @@ export default function Dashboard() {
     }
   }, [activeBoard]);
 
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          isAddingList &&
-          addListRef.current &&
-          !addListRef.current.contains(event.target as Node)
-        ) {
-          setIsAddingList(false);
-          setNewListTitle("");
-        }
-      };
-  
-      if (isAddingList) {
-        document.addEventListener("mousedown", handleClickOutside);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isAddingList &&
+        addListRef.current &&
+        !addListRef.current.contains(event.target as Node)
+      ) {
+        setIsAddingList(false);
+        setNewListTitle("");
       }
-  
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [isAddingList]);
+    };
+
+    if (isAddingList) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isAddingList]);
 
   return (
     <section className="flex-1 overflow-x-auto overflow-y-hidden px-6 py-6">

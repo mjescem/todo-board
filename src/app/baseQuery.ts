@@ -23,7 +23,11 @@ export const createCustomBaseQuery = (
     const result = await baseQuery(args, api, extraOptions);
 
     if (result.error && result.error.status === 401) {
-       if (!isLoggingOut) {
+       const url = typeof args === "string" ? args : args.url;
+       const isAuthRoute =
+         url.includes("/auth/login") || url.includes("/auth/signup");
+
+       if (!isAuthRoute && !isLoggingOut) {
          isLoggingOut = true;
 
          api.dispatch(logout());
